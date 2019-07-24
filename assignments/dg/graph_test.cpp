@@ -12,3 +12,8 @@
 #include "catch.h"
 
 // TODO(students): Fill this in.
+
+TEST_CASE("Insert Node", "[Temporary Test]") {
+  gdwg::Graph<char,int> test;
+  test.InsertNode('q');
+}
