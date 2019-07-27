@@ -13,10 +13,25 @@ namespace gdwg {
 
 template <typename N, typename E>
 class Graph {
-    typedef N Node;
-    typedef std::tuple<std::shared_ptr<Node>, std::shared_ptr<Node>, E>  Edge;
+
+    typedef std::tuple<std::shared_ptr<N>, std::shared_ptr<N>, E>  Edge;
 
  public:
+
+    struct Node {
+
+        Node(const N &val) : val(std::make_shared<N>(val)) {}
+        std::shared_ptr<N> val;
+
+        friend bool operator==(const Node &a, const Node &b) {
+            return *(a.val) ==  *(b.val);
+        }
+
+        friend bool operator<(const Node &a, const Node &b) {
+            return *(a.val) <  *(b.val);
+        }
+
+    };
 
 //   class const_iterator {};
 
@@ -54,27 +69,28 @@ class Graph {
 private:
     std::set<Node> nodes_;
     std::set<Edge> edges_;
-
-    /*std::vector<Node> adj_list_;
-    std::map<N, std::unique_ptr<N>> object_map_;
-    int node_count_;*/
 };
 
 // creates a vector<N> containing val in
 // the first index, and adds it to adj list
 template <typename N, typename E>
 bool Graph<N, E>::InsertNode(const N &val) {
-    Node temp_node = val;
-    nodes_.insert(temp_node);
-    return true; // since its a set, it automatically checks if the node already exists and only inserts if it doesn't
+    Node shared_node{val};
+    auto result = nodes_.insert(shared_node);
+    // maggie's comment:
+    // you need to return false if it already existed
+    // do something like
+    // auto result = nodes_.insert(temp_node);
+    // return result.second; as per http://www.cplusplus.com/reference/set/set/insert/
+    return result.second;
 }
 
 template <typename N, typename E>
 bool Graph<N,E>::InsertEdge(const N& src, const N& dst, const E& w) {
     // If src or dst doesn't exist already, we should throw an error
     if (!IsNode(src) || !IsNode(dst)) return false; //AND THROW AN ERROR
-    std::shared_ptr src_ptr = std::make_shared<Node>(src);
-    std::shared_ptr dst_ptr = std::make_shared<Node>(dst);
+    auto src_ptr = *(nodes_.find(Node{src}));
+    auto dst_ptr = *(nodes_.find(Node{dst}));
     Edge e = std::make_tuple(src_ptr, dst_ptr, w);
     edges_.insert(e);
     return true;
@@ -83,19 +99,19 @@ bool Graph<N,E>::InsertEdge(const N& src, const N& dst, const E& w) {
 template <typename N, typename E>
 bool Graph<N,E>::DeleteNode(const N& val) {
     if (!IsNode(val)) return false; // if the node doesn't exist, there's nothing to delete
-    for (typename std::set<Edge>::iterator it = edges_.begin(); it != edges_.end(); ++it) {
-        if (std::get<0>(*it) == val || std::get<1>(*it) == val) { // if any of the connecting nodes in the edges is the node we're deleting, just delete the edge
-            delete *it;
-        }
-    }
-    // once we finish the loop, all the edges that have the target node connected will be deleted
-    // this will delete all the shared pointers to that target node, effectively deleting it and the edges at once
+    delete nodes_.find(val);
+    // for (typename std::set<Edge>::iterator it = edges_.begin(); it != edges_.end(); ++it) {
+    //     if (std::get<0>(*it) == val || std::get<1>(*it) == val) { // if any of the connecting nodes in the edges is the node we're deleting, just delete the edge
+    //         delete *it;
+    //     }
+    // }
+    
+    // delete all edge entries involving this node
 }
 
 template <typename N, typename E>
 bool Graph<N,E>::IsNode(const N &val) {
-    if (nodes_.contains(val)) return true;
-    return false;
+    return nodes_.find(Node{val}) != nodes_.end();
 }
 
 /*bool Graph<N, E>::InsertNode(const N &val) {
