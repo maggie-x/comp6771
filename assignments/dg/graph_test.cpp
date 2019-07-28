@@ -15,5 +15,14 @@
 
 TEST_CASE("Insert Node", "[Temporary Test]") {
   gdwg::Graph<char,int> test;
+
   test.InsertNode('q');
+  REQUIRE(test.IsNode('q') == true);
+
+  test.InsertNode('p');
+  REQUIRE(test.IsNode('p') == true);
+  REQUIRE(test.InsertEdge('p', 'q', 5) == true);
+
+  std::cout << test;
+
 }

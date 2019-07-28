@@ -7,21 +7,68 @@
 #include <map>
 #include <tuple>
 #include <set>
+#include <utility>
 
 namespace gdwg {
 
 
 template <typename N, typename E>
 class Graph {
-    typedef N Node;
-    typedef std::tuple<std::shared_ptr<Node>, std::shared_ptr<Node>, E>  Edge;
+
 
  public:
+
+    struct Node {
+        typedef std::pair<std::shared_ptr<N>, E>  Edge;
+        Node(const N &val) : val(std::make_shared<N>(val)), edges_() {}
+        std::shared_ptr<N> val;
+        std::set<Edge> edges_;
+
+        friend bool operator==(const Node &a, const Node &b) {
+            return *(a.val) ==  *(b.val);
+        }
+
+        friend bool operator<(const Node &a, const Node &b) {
+            return *(a.val) < *(b.val);
+        }
+
+        bool InsertOutgoing(std::shared_ptr<N> dst, const E &weight) { // pass in shared ptr after finding node in set of nodes
+            std::cout << "number of edges for node " << *val << " is " << edges_.size() << std::endl;
+            std::cout << "  inserting new outgoing edge" << std::endl;
+            std::cout << "  making pair from" << dst << " " << weight << std::endl;
+            Edge e = std::make_pair(dst, weight);
+            auto result = edges_.insert(e);
+            std::cout << "number of edges for node " << *val << " is " << edges_.size() << std::endl;
+            return result.second;
+        }
+
+        void CleanOutgoing(const N &src) {
+            auto it = edges_.cbegin();
+            while (it != edges_.cend()) {
+                if (it->second == src) { // found a dst which is an src
+                    edges_.erase(it++);
+                } else {
+                    ++it;
+                }
+            }
+        }
+
+        friend std::ostream& operator<<(std::ostream &os, const Node &node) {
+            std::cout << "number of edges for node " << *(node.val) << " is " << node.edges_.size() << std::endl;
+            os << *(node.val) << " (" << std::endl;
+            for (auto it = node.edges_.cbegin(); it != node.edges_.cend(); ++it) {
+                os << "  " << *((*it).first) << " | " <<  (*it).second << std::endl;
+            }
+            os << ")" << std::endl;
+
+            return os;
+        }
+    };
 
 //   class const_iterator {};
 
   // default constructor
-  Graph() : nodes_(), edges_() {}
+  Graph() : nodes_() {}
 
   //    METHODS
 
@@ -51,77 +98,73 @@ class Graph {
   const_iterator crbegin();
   const_iterator crend();*/
 
-  friend bool operator==(const gdwg::Graph<N, E>&, const gdwg::Graph<N, E>&);
-  friend bool operator!=(const gdwg::Graph<N, E>&, const gdwg::Graph<N, E>&);
+  // FRIENDS
+
+    friend std::ostream& operator<<(std::ostream &os, const Graph<N, E> &graph) {
+        std::cout << "--- PRINTING OUT GRAPH --- " << std::endl;
+        std::cout << "nodes in graph: " << graph.nodes_.size() << std::endl;
+        for (auto it = graph.nodes_.cbegin(); it != graph.nodes_.cend(); ++it) {
+            os << *(it);
+        }
+
+        return os;
+    }
 
 private:
     std::set<Node> nodes_;
-    std::set<Edge> edges_;
-
-    /*std::vector<Node> adj_list_;
-    std::map<N, std::unique_ptr<N>> object_map_;
-    int node_count_;*/
+    // std::set<Edge> edges_;
 };
 
-// creates a vector<N> containing val in
-// the first index, and adds it to adj list
+
+
 template <typename N, typename E>
 bool Graph<N, E>::InsertNode(const N &val) {
-    Node temp_node = val;
-    nodes_.insert(temp_node);
-    return true; // since its a set, it automatically checks if the node already exists and only inserts if it doesn't
+    Node new_node{val};
+    auto result = nodes_.insert(new_node);
+    return result.second;
 }
 
 template <typename N, typename E>
 bool Graph<N,E>::InsertEdge(const N& src, const N& dst, const E& w) {
-    // If src or dst doesn't exist already, we should throw an error
     if (!IsNode(src) || !IsNode(dst)) return false; //AND THROW AN ERROR
-    std::shared_ptr src_ptr = std::make_shared<Node>(src);
-    std::shared_ptr dst_ptr = std::make_shared<Node>(dst);
-    Edge e = std::make_tuple(src_ptr, dst_ptr, w);
-    edges_.insert(e);
-    return true;
+    auto src_it = nodes_.find(Node{src});
+    auto src_node = *(src_it); 
+    auto dst_node = *(nodes_.find(Node{dst}));
+    auto result = src_node.InsertOutgoing(dst_node.val, w);
+    nodes_.erase(src_it);
+    nodes_.insert(src_node);
+    return result;
 }
 
 template <typename N, typename E>
 bool Graph<N,E>::DeleteNode(const N& val) {
     if (!IsNode(val)) return false; // if the node doesn't exist, there's nothing to delete
-    for (typename std::set<Edge>::iterator it = edges_.begin(); it != edges_.end(); ++it) {
-        if (std::get<0>(*it) == val || std::get<1>(*it) == val) { // if any of the connecting nodes in the edges is the node we're deleting, just delete the edge
-            delete *it;
-        }
+
+    auto val_it = nodes_.find(Node{val});
+    nodes_.erase(val_it); 
+     // then delete all the other shared_ptrs so no memory leak
+    
+    for (auto it = nodes_.begin(); it !+ nodes_.end(); ++it) {
+
+        auto curr_node = *it;
+        curr_node.CleanOutgoing(val);
+        
     }
-    // once we finish the loop, all the edges that have the target node connected will be deleted
-    // this will delete all the shared pointers to that target node, effectively deleting it and the edges at once
+
+    // for (typename std::set<Edge>::iterator it = edges_.begin(); it != edges_.end(); ++it) {
+    //     if (std::get<0>(*it) == val || std::get<1>(*it) == val) { // if any of the connecting nodes in the edges is the node we're deleting, just delete the edge
+    //         delete *it;
+    //     }
+    // }
+    
+    // delete all edge entries involving this node
 }
 
 template <typename N, typename E>
 bool Graph<N,E>::IsNode(const N &val) {
-    if (nodes_.contains(val)) return true;
-    return false;
+    return nodes_.find(Node{val}) != nodes_.end();
 }
 
-/*bool Graph<N, E>::InsertNode(const N &val) {
-  if (this->IsNode(val) == false) {
-    auto new_node_ptr = std::make_unique<N>(val);
-    E empty{};
-    Edge new_node{new_node_ptr, empty};
-
-    std::cout << "value unique ptr : " << *new_node_ptr;
-    std::cout << "empty: " << empty;
-
-    std::vector<Edge> new_vertex{new_node};
-
-    Node new_vertex_ptr = std::make_unique<std::vector<Edge>>(new_vertex); // does this make a copy of the object?
-    adj_list_.emplace_back(new_vertex_ptr);
-
-    this->object_map_[val] = new_node_ptr; // add this mapping of object value to 
-
-    return true;
-  }
-
-  return false;
-}*/
 
 template <typename N, typename E>
 bool operator==(const gdwg::Graph<N, E>& g1, const gdwg::Graph<N, E>& g2) {
