@@ -82,7 +82,7 @@ class Graph {
   bool DeleteNode(const N&);
   bool Replace(const N& oldData, const N& newData);
 //   void MergeReplace(const N& oldData, const N& newData)
-//   void Clear()
+  void Clear();
   bool IsNode(const N& val);
   // bool IsConnected(const N& src, const N& dst);
   /*std::vector<N> GetNodes()
@@ -146,7 +146,9 @@ bool Graph<N,E>::DeleteNode(const N& val) {
 
     auto val_it = nodes_.find(Node{val});
     nodes_.erase(val_it); 
-     // then delete all the other shared_ptrs so no memory leak
+
+     // then delete all the other shared_ptrs so ref_count == 0
+     // and underlying object deleted ie no memory leak
     
     auto it = nodes_.begin();
     while (it != nodes_.end()) {
@@ -184,6 +186,19 @@ bool Graph<N,E>::Replace(const N& oldData, const N& newData) {
 template <typename N, typename E>
 bool Graph<N,E>::IsNode(const N &val) {
     return nodes_.find(Node{val}) != nodes_.end();
+}
+
+// template <typename N, typename E>    
+// void Graph<N,E>::MergeReplace(const N& oldData, const N& newData) {}
+
+
+template <typename N, typename E>
+void Graph<N,E>::Clear() {
+
+    /* will call destructors on all fields and child classes (i believe)
+    and since we are using smart pointers, underlying object will be
+    clean up automatically*/
+    nodes_.clear();
 }
 
 }  // namespace gdwg
