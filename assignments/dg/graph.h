@@ -66,10 +66,27 @@ class Graph {
   const_iterator crbegin();
   const_iterator crend();*/
 
+  // FRIENDS
+
+  friend std::ostream& operator<<(std::ostream &os, const gdwg::Graph<N, E> &graph);
+
+
 private:
     std::set<Node> nodes_;
     std::set<Edge> edges_;
 };
+
+template <typename N, typename E>
+std::ostream& operator<<(std::ostream &os, const gdwg::Graph<N, E> &graph) {
+    for (const auto it_nodes = graph.nodes_.cbegin(); it_nodes != graph.nodes_.cend(); ++it_nodes) {
+        os << (*it_nodes).val << " (" << std::endl;
+        for (const auto it_edges = graph.edges_.cbegin(); it_edges != graph.edges_.cend(); ++it_edges) {
+            if ((*it_nodes) == it_edges.get(0)){
+
+            }
+        }
+    }
+}
 
 // creates a vector<N> containing val in
 // the first index, and adds it to adj list
