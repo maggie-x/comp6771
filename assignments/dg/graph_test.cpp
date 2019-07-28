@@ -64,13 +64,19 @@ TEST_CASE("Insert Node", "[Temporary Test]") {
   test.InsertEdge('y', '1', 1);
   test.InsertEdge('y', '2', 2);
   test.InsertEdge('y', '3', 3);
-
   std::cout << test;
 
   auto connected = test.GetConnected('y');
   for (auto it = connected.begin(); it != connected.end(); ++it) {
     std::cout << *it << " ";
   }
+  std::cout << std::endl;
 
+
+  auto weights = test.GetWeights('y', 'x');
+  for (auto it = weights.begin(); it != weights.end(); ++it) {
+    std::cout << *it << " ";
+  }
+  std::cout << std::endl;
 
 }

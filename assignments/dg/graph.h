@@ -75,6 +75,17 @@ class Graph {
           return outgoing;
         }
 
+        std::vector<E> GetDestWeights(const N &dst) {
+          std::vector<E> weights;
+          for (auto it = edges_.cbegin(); it != edges_.cend(); ++it) {
+            if (*(it->first) == dst){
+              weights.emplace_back(it->second);
+            }
+          }
+          std::sort(weights.begin(), weights.end());
+          return weights;
+        }
+
         friend std::ostream& operator<<(std::ostream &os, const Node &node) {
             std::cout << "number of edges for node " << *(node.val) << " is " << node.edges_.size() << std::endl;
             os << *(node.val) << " (" << std::endl;
@@ -107,7 +118,7 @@ class Graph {
   bool IsConnected(const N& src, const N& dst);
   std::vector<N> GetNodes();
   std::vector<N> GetConnected(const N& src);
-//   std::vector<E> GetWeights(const N& src, const N& dst)
+  std::vector<E> GetWeights(const N& src, const N& dst);
 //   const_iterator find(const N&, const N&, const E&);
 //   bool erase(const N& src, const N& dst, const E& w)
 //   const_iterator erase(graph_const_iterator it);
@@ -254,6 +265,17 @@ std::vector<N> Graph<N,E>::GetConnected(const N& src) {
   auto connected_set = src_node.GetOutgoing();
   std::vector<N> connected_vector(connected_set.begin(), connected_set.end());
   return connected_vector;
+
+}
+
+template <typename N, typename E>
+std::vector<E> Graph<N,E>::GetWeights(const N& src, const N& dst) {
+  if (!IsNode(src) || !IsNode(dst)) {
+    throw std::out_of_range("Cannot call Graph::GetWeights if src or dst node don't exist in the graph");
+  }
+
+  auto src_node = *(nodes_.find(Node{src}));
+  return src_node.GetDestWeights(dst);
 
 }
 
