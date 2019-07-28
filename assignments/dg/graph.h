@@ -55,6 +55,16 @@ class Graph {
             }
         }
 
+        bool HasOutgoing(const N &dst) {
+            for (auto it = edges_.cbegin(); it != edges_.cend(); ++it) {
+                if (*(it->first) == dst) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         friend std::ostream& operator<<(std::ostream &os, const Node &node) {
             std::cout << "number of edges for node " << *(node.val) << " is " << node.edges_.size() << std::endl;
             os << *(node.val) << " (" << std::endl;
@@ -84,7 +94,7 @@ class Graph {
 //   void MergeReplace(const N& oldData, const N& newData)
   void Clear();
   bool IsNode(const N& val);
-  // bool IsConnected(const N& src, const N& dst);
+  bool IsConnected(const N& src, const N& dst);
   /*std::vector<N> GetNodes()
   std::vector<N> GetConnected(const N& src)
   std::vector<E> GetWeights(const N& src, const N& dst)
@@ -199,6 +209,19 @@ void Graph<N,E>::Clear() {
     and since we are using smart pointers, underlying object will be
     clean up automatically*/
     nodes_.clear();
+}
+
+template <typename N, typename E>
+bool Graph<N,E>::IsConnected(const N& src, const N& dst){
+
+    if (!IsNode(src) || !IsNode(dst)) {
+        throw std::runtime_error("Cannot call Graph::IsConnected if src or dst node don't exist in the graph");
+    }
+
+    auto src_node = *(nodes_.find(Node{src}));
+
+    return src_node.HasOutgoing(dst);
+
 }
 
 }  // namespace gdwg

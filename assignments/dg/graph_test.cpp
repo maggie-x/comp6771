@@ -42,11 +42,13 @@ TEST_CASE("Insert Node", "[Temporary Test]") {
   //     std::cout << test;
 
 
-  test.Replace('x', '&');
-  std::cout << test;
+  // test.Replace('x', '&');
+  // std::cout << test;
 
-  test.Clear();
-  std::cout << test;
+  // test.Clear();
+  // std::cout << test;
+
+  REQUIRE(test.IsConnected('x', 'y') == true);
 
 
 
