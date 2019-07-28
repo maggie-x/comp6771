@@ -51,6 +51,9 @@ class Graph {
   const_iterator crbegin();
   const_iterator crend();*/
 
+  friend bool operator==(const gdwg::Graph<N, E>&, const gdwg::Graph<N, E>&);
+  friend bool operator!=(const gdwg::Graph<N, E>&, const gdwg::Graph<N, E>&);
+
 private:
     std::set<Node> nodes_;
     std::set<Edge> edges_;
@@ -119,6 +122,31 @@ bool Graph<N,E>::IsNode(const N &val) {
 
   return false;
 }*/
+
+template <typename N, typename E>
+bool operator==(const gdwg::Graph<N, E>& g1, const gdwg::Graph<N, E>& g2) {
+    // check each node exists
+    for (N n : g1.nodes_) {
+        if (g2.nodes_.contains(n)) continue;
+        else return false;
+    }
+
+    // check each edge exists
+    for (std::tuple<std::shared_ptr<N>, std::shared_ptr<N>, E> e : g1.edges_) {
+        if (g2.edges_.contains(e)) continue;
+        else return false;
+    }
+
+    // if we reach here then that means each edge/node exists in both graphs
+    return true;
+}
+
+template <typename N, typename E>
+bool operator!=(const gdwg::Graph<N, E>& g1, const gdwg::Graph<N, E>& g2) {
+    // using previously defined == operator
+    if (g1 == g2) return false;
+    return true;
+}
 
 }  // namespace gdwg
 
