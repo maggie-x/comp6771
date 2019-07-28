@@ -55,9 +55,22 @@ TEST_CASE("Insert Node", "[Temporary Test]") {
   for (auto it = nodes.begin(); it != nodes.end(); ++it) {
     std::cout << *it << " ";
   }
-  
-  
 
+  std::cout << std::endl;
+
+  test.InsertNode('1');
+  test.InsertNode('2');
+  test.InsertNode('3');
+  test.InsertEdge('y', '1', 1);
+  test.InsertEdge('y', '2', 2);
+  test.InsertEdge('y', '3', 3);
+
+  std::cout << test;
+
+  auto connected = test.GetConnected('y');
+  for (auto it = connected.begin(); it != connected.end(); ++it) {
+    std::cout << *it << " ";
+  }
 
 
 }

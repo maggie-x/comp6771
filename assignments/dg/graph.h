@@ -8,6 +8,7 @@
 #include <tuple>
 #include <set>
 #include <utility>
+#include <algorithm>
 
 namespace gdwg {
 
@@ -65,6 +66,15 @@ class Graph {
             return false;
         }
 
+        std::set<N> GetOutgoing() {
+          std::set<N> outgoing;
+          for (auto it = edges_.cbegin(); it != edges_.cend(); ++it) {
+              outgoing.emplace(*(it->first));
+          }
+
+          return outgoing;
+        }
+
         friend std::ostream& operator<<(std::ostream &os, const Node &node) {
             std::cout << "number of edges for node " << *(node.val) << " is " << node.edges_.size() << std::endl;
             os << *(node.val) << " (" << std::endl;
@@ -96,7 +106,7 @@ class Graph {
   bool IsNode(const N& val);
   bool IsConnected(const N& src, const N& dst);
   std::vector<N> GetNodes();
-//   std::vector<N> GetConnected(const N& src)
+  std::vector<N> GetConnected(const N& src);
 //   std::vector<E> GetWeights(const N& src, const N& dst)
 //   const_iterator find(const N&, const N&, const E&);
 //   bool erase(const N& src, const N& dst, const E& w)
@@ -230,7 +240,21 @@ std::vector<N> Graph<N,E>::GetNodes() {
   for (auto it = nodes_.cbegin(); it != nodes_.cend(); ++it) {
     vector_of_nodes.emplace_back((*(it->val)));
   }
+
+  std::sort(vector_of_nodes.begin(), vector_of_nodes.end());
   return vector_of_nodes;
+}
+
+template <typename N, typename E>
+std::vector<N> Graph<N,E>::GetConnected(const N& src) {
+  if (!IsNode(src)) {
+    throw std::out_of_range("Cannot call Graph::GetConnected if src doesn't exist in the graph");
+  }
+  auto src_node = *(nodes_.find(Node{src}));
+  auto connected_set = src_node.GetOutgoing();
+  std::vector<N> connected_vector(connected_set.begin(), connected_set.end());
+  return connected_vector;
+
 }
 
 }  // namespace gdwg
