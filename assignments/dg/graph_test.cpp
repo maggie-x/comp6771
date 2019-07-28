@@ -50,6 +50,14 @@ TEST_CASE("Insert Node", "[Temporary Test]") {
 
   REQUIRE(test.IsConnected('x', 'y') == true);
 
+  auto nodes = test.GetNodes();
+
+  for (auto it = nodes.begin(); it != nodes.end(); ++it) {
+    std::cout << *it << " ";
+  }
+  
+  
+
 
 
 }

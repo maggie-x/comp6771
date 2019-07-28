@@ -95,20 +95,20 @@ class Graph {
   void Clear();
   bool IsNode(const N& val);
   bool IsConnected(const N& src, const N& dst);
-  /*std::vector<N> GetNodes()
-  std::vector<N> GetConnected(const N& src)
-  std::vector<E> GetWeights(const N& src, const N& dst)
-  const_iterator find(const N&, const N&, const E&);
-  bool erase(const N& src, const N& dst, const E& w)
-  const_iterator erase(graph_const_iterator it);
-  const_iterator begin();
-  const_iterator end();
-  const_iterator rbegin();
-  const_iterator rend();
-  const_iterator cbegin();
-  const_iterator cend();
-  const_iterator crbegin();
-  const_iterator crend();*/
+  std::vector<N> GetNodes();
+//   std::vector<N> GetConnected(const N& src)
+//   std::vector<E> GetWeights(const N& src, const N& dst)
+//   const_iterator find(const N&, const N&, const E&);
+//   bool erase(const N& src, const N& dst, const E& w)
+//   const_iterator erase(graph_const_iterator it);
+//   const_iterator begin();
+//   const_iterator end();
+//   const_iterator rbegin();
+//   const_iterator rend();
+//   const_iterator cbegin();
+//   const_iterator cend();
+//   const_iterator crbegin();
+//   const_iterator crend();
 
   // FRIENDS
 
@@ -222,6 +222,15 @@ bool Graph<N,E>::IsConnected(const N& src, const N& dst){
 
     return src_node.HasOutgoing(dst);
 
+}
+
+template <typename N, typename E>
+std::vector<N> Graph<N,E>::GetNodes() {
+  std::vector<N> vector_of_nodes;
+  for (auto it = nodes_.cbegin(); it != nodes_.cend(); ++it) {
+    vector_of_nodes.emplace_back((*(it->val)));
+  }
+  return vector_of_nodes;
 }
 
 }  // namespace gdwg
