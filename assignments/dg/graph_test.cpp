@@ -20,6 +20,9 @@ TEST_CASE("Insert Node", "[Temporary Test]") {
   REQUIRE(test.IsNode('q') == true);
 
   test.InsertNode('p');
-  test.InsertEdge('p', 'q', 5);
-  
+  REQUIRE(test.IsNode('p') == true);
+  REQUIRE(test.InsertEdge('p', 'q', 5) == true);
+
+  std::cout << test;
+
 }
