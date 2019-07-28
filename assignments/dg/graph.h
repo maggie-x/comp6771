@@ -45,7 +45,7 @@ class Graph {
         void CleanOutgoing(const N &src) {
             auto it = edges_.cbegin();
             while (it != edges_.cend()) {
-                if (it->second == src) { // found a dst which is an src
+                if (*(it->first) == src) { // found a dst which is an src
                     edges_.erase(it++);
                 } else {
                     ++it;
@@ -145,12 +145,20 @@ bool Graph<N,E>::DeleteNode(const N& val) {
     nodes_.erase(val_it); 
      // then delete all the other shared_ptrs so no memory leak
     
-    for (auto it = nodes_.begin(); it !+ nodes_.end(); ++it) {
+    auto it = nodes_.begin();
+    while (it != nodes_.end()) {
 
-        auto curr_node = *it;
-        curr_node.CleanOutgoing(val);
+        auto clean_node = *it;
+        clean_node.CleanOutgoing(val);
+        nodes_.erase(it++);
+        auto result = nodes_.insert(clean_node);
+
+        return result.second;
         
     }
+
+
+    return false;
 
     // for (typename std::set<Edge>::iterator it = edges_.begin(); it != edges_.end(); ++it) {
     //     if (std::get<0>(*it) == val || std::get<1>(*it) == val) { // if any of the connecting nodes in the edges is the node we're deleting, just delete the edge

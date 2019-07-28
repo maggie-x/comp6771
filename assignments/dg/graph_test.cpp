@@ -25,4 +25,9 @@ TEST_CASE("Insert Node", "[Temporary Test]") {
 
   std::cout << test;
 
+  test.DeleteNode('q');
+
+  std::cout << test;
+
+
 }
