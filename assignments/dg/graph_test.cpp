@@ -29,5 +29,25 @@ TEST_CASE("Insert Node", "[Temporary Test]") {
 
   std::cout << test;
 
+  test.InsertNode('x');
+  test.InsertNode('y');
+  test.InsertEdge('x', 'y', 9);
+  test.InsertEdge('y', 'x', -9);
+  test.InsertEdge('y', 'x', -99);
+
+
+    std::cout << test;
+
+  // test.DeleteNode('x');
+
+  //     std::cout << test;
+
+
+  test.Replace('x', '&');
+
+  std::cout << test;
+
+
+
 
 }

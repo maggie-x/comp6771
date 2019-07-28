@@ -33,18 +33,20 @@ class Graph {
         }
 
         bool InsertOutgoing(std::shared_ptr<N> dst, const E &weight) { // pass in shared ptr after finding node in set of nodes
-            std::cout << "number of edges for node " << *val << " is " << edges_.size() << std::endl;
-            std::cout << "  inserting new outgoing edge" << std::endl;
-            std::cout << "  making pair from" << dst << " " << weight << std::endl;
+            std::cout << "InsertOutgoing(" << *dst << ", " << weight << ")" << std::endl;
             Edge e = std::make_pair(dst, weight);
             auto result = edges_.insert(e);
-            std::cout << "number of edges for node " << *val << " is " << edges_.size() << std::endl;
+            std::cout << *val << " has edges: " << edges_.size() << std::endl;
             return result.second;
         }
 
         void CleanOutgoing(const N &src) {
+            std::cout << "CleanOutgoing(" << src << ")" << std::endl;
             auto it = edges_.cbegin();
             while (it != edges_.cend()) {
+
+                std::cout << " *(it->first): " << *(it->first) << std::endl;
+                
                 if (*(it->first) == src) { // found a dst which is an src
                     edges_.erase(it++);
                 } else {
@@ -78,9 +80,9 @@ class Graph {
   bool InsertEdge(const N& src, const N& dst, const E& w);
   // deletes node
   bool DeleteNode(const N&);
- /* bool Replace(const N& oldData, const N& newData);
-  void MergeReplace(const N& oldData, const N& newData)
-  void Clear()*/
+  bool Replace(const N& oldData, const N& newData);
+//   void MergeReplace(const N& oldData, const N& newData)
+//   void Clear()
   bool IsNode(const N& val);
   // bool IsConnected(const N& src, const N& dst);
   /*std::vector<N> GetNodes()
@@ -139,6 +141,7 @@ bool Graph<N,E>::InsertEdge(const N& src, const N& dst, const E& w) {
 
 template <typename N, typename E>
 bool Graph<N,E>::DeleteNode(const N& val) {
+    std::cout << "-- DeleteNode(" << val << ")" << std::endl;
     if (!IsNode(val)) return false; // if the node doesn't exist, there's nothing to delete
 
     auto val_it = nodes_.find(Node{val});
@@ -151,50 +154,37 @@ bool Graph<N,E>::DeleteNode(const N& val) {
         auto clean_node = *it;
         clean_node.CleanOutgoing(val);
         nodes_.erase(it++);
-        auto result = nodes_.insert(clean_node);
-
-        return result.second;
+        nodes_.insert(clean_node);
         
     }
 
-
     return false;
+}
 
-    // for (typename std::set<Edge>::iterator it = edges_.begin(); it != edges_.end(); ++it) {
-    //     if (std::get<0>(*it) == val || std::get<1>(*it) == val) { // if any of the connecting nodes in the edges is the node we're deleting, just delete the edge
-    //         delete *it;
-    //     }
-    // }
-    
-    // delete all edge entries involving this node
+template <typename N, typename E>
+bool Graph<N,E>::Replace(const N& oldData, const N& newData) {
+    if (!IsNode(oldData)) {
+        throw std::runtime_error("Cannot call Graph::Replace on a node that doesn't exist");
+    }
+
+
+    if (IsNode(newData)) {
+        return false;
+    }
+
+    auto replace_it = nodes_.find(Node{oldData});
+    auto replace_node = *replace_it;
+    nodes_.erase(replace_it);
+    *(replace_node.val) = newData;
+    auto result = nodes_.insert(replace_node);
+
+    return result.second;
 }
 
 template <typename N, typename E>
 bool Graph<N,E>::IsNode(const N &val) {
     return nodes_.find(Node{val}) != nodes_.end();
 }
-
-/*bool Graph<N, E>::InsertNode(const N &val) {
-  if (this->IsNode(val) == false) {
-    auto new_node_ptr = std::make_unique<N>(val);
-    E empty{};
-    Edge new_node{new_node_ptr, empty};
-
-    std::cout << "value unique ptr : " << *new_node_ptr;
-    std::cout << "empty: " << empty;
-
-    std::vector<Edge> new_vertex{new_node};
-
-    Node new_vertex_ptr = std::make_unique<std::vector<Edge>>(new_vertex); // does this make a copy of the object?
-    adj_list_.emplace_back(new_vertex_ptr);
-
-    this->object_map_[val] = new_node_ptr; // add this mapping of object value to 
-
-    return true;
-  }
-
-  return false;
-}*/
 
 }  // namespace gdwg
 
