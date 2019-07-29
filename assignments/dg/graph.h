@@ -20,88 +20,110 @@ class Graph {
  public:
 
     struct Node {
-        typedef std::pair<std::shared_ptr<N>, E>  Edge;
-        Node(const N &val) : val(std::make_shared<N>(val)), edges_() {}
-        std::shared_ptr<N> val;
-        std::set<Edge> edges_;
+      typedef std::pair<std::shared_ptr<N>, E>  Edge;
+      Node(const N &val) : val(std::make_shared<N>(val)), edges_() {}
+      std::shared_ptr<N> val;
+      std::set<Edge> edges_;
 
-        friend bool operator==(const Node &a, const Node &b) {
-            return *(a.val) ==  *(b.val);
-        }
+      friend bool operator==(const Node &a, const Node &b) {
+          return *(a.val) ==  *(b.val);
+      }
 
-        friend bool operator<(const Node &a, const Node &b) {
-            return *(a.val) < *(b.val);
-        }
+      friend bool operator<(const Node &a, const Node &b) {
+          return *(a.val) < *(b.val);
+      }
 
-        bool InsertOutgoing(std::shared_ptr<N> dst, const E &weight) { // pass in shared ptr after finding node in set of nodes
-            std::cout << "InsertOutgoing(" << *dst << ", " << weight << ")" << std::endl;
-            Edge e = std::make_pair(dst, weight);
-            auto result = edges_.insert(e);
-            std::cout << *val << " has edges: " << edges_.size() << std::endl;
-            return result.second;
-        }
+      bool InsertOutgoing(std::shared_ptr<N> dst, const E &weight) { // pass in shared ptr after finding node in set of nodes
+          std::cout << "InsertOutgoing(" << *dst << ", " << weight << ")" << std::endl;
+          Edge e = std::make_pair(dst, weight);
+          auto result = edges_.insert(e);
+          std::cout << *val << " has edges: " << edges_.size() << std::endl;
+          return result.second;
+      }
 
-        void CleanOutgoing(const N &src) {
-            std::cout << "CleanOutgoing(" << src << ")" << std::endl;
-            auto it = edges_.cbegin();
-            while (it != edges_.cend()) {
+      void CleanOutgoing(const N &src) {
+          std::cout << "CleanOutgoing(" << src << ")" << std::endl;
+          auto it = edges_.cbegin();
+          while (it != edges_.cend()) {
 
-                std::cout << " *(it->first): " << *(it->first) << std::endl;
-                
-                if (*(it->first) == src) { // found a dst which is an src
-                    edges_.erase(it++);
-                } else {
-                    ++it;
-                }
-            }
-        }
+              std::cout << " *(it->first): " << *(it->first) << std::endl;
+              
+              if (*(it->first) == src) { // found a dst which is an src
+                  edges_.erase(it++);
+              } else {
+                  ++it;
+              }
+          }
+      }
 
-        bool HasOutgoing(const N &dst) {
-            for (auto it = edges_.cbegin(); it != edges_.cend(); ++it) {
-                if (*(it->first) == dst) {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        std::set<N> GetOutgoing() {
-          std::set<N> outgoing;
+      bool HasOutgoing(const N &dst) {
           for (auto it = edges_.cbegin(); it != edges_.cend(); ++it) {
-              outgoing.emplace(*(it->first));
+              if (*(it->first) == dst) {
+                  return true;
+              }
           }
 
-          return outgoing;
+          return false;
+      }
+
+      std::set<N> GetOutgoing() {
+        std::set<N> outgoing;
+        for (auto it = edges_.cbegin(); it != edges_.cend(); ++it) {
+            outgoing.emplace(*(it->first));
         }
 
-        std::vector<E> GetDestWeights(const N &dst) {
-          std::vector<E> weights;
-          for (auto it = edges_.cbegin(); it != edges_.cend(); ++it) {
-            if (*(it->first) == dst){
-              weights.emplace_back(it->second);
-            }
+        return outgoing;
+      }
+
+      std::vector<E> GetDestWeights(const N &dst) {
+        std::vector<E> weights;
+        for (auto it = edges_.cbegin(); it != edges_.cend(); ++it) {
+          if (*(it->first) == dst){
+            weights.emplace_back(it->second);
           }
-          std::sort(weights.begin(), weights.end());
-          return weights;
         }
+        std::sort(weights.begin(), weights.end());
+        return weights;
+      }
 
-        friend std::ostream& operator<<(std::ostream &os, const Node &node) {
-            std::cout << "number of edges for node " << *(node.val) << " is " << node.edges_.size() << std::endl;
-            os << *(node.val) << " (" << std::endl;
-            for (auto it = node.edges_.cbegin(); it != node.edges_.cend(); ++it) {
-                os << "  " << *((*it).first) << " | " <<  (*it).second << std::endl;
-            }
-            os << ")" << std::endl;
+      friend std::ostream& operator<<(std::ostream &os, const Node &node) {
+          std::cout << "number of edges for node " << *(node.val) << " is " << node.edges_.size() << std::endl;
+          os << *(node.val) << " (" << std::endl;
+          for (auto it = node.edges_.cbegin(); it != node.edges_.cend(); ++it) {
+              os << "  " << *((*it).first) << " | " <<  (*it).second << std::endl;
+          }
+          os << ")" << std::endl;
 
-            return os;
-        }
+          return os;
+      }
     };
 
-//   class const_iterator {};
+  // class const_iterator {};
 
   // default constructor
   Graph() : nodes_() {}
+
+  Graph(typename std::vector<N>::const_iterator start, typename std::vector<N>::const_iterator end) {
+    for (auto it = start; it != end; ++it) {
+      InsertNode(*it);
+    }
+  }
+
+  Graph(typename std::vector<std::tuple<N, N, E>>::const_iterator start, typename std::vector<std::tuple<N, N, E>>::const_iterator end) {
+    for (auto it = start; it != end; ++it) {
+      InsertNode(std::get<0>(*it));
+      InsertNode(std::get<1>(*it));
+      InsertEdge(std::get<0>(*it), std::get<1>(*it), std::get<2>(*it));
+    }
+  }
+
+  Graph(std::initializer_list<N> init) {
+    for (auto it = init.begin(); it != init.end(); ++it){
+      InsertNode(*it);
+    }
+  }
+
+  
 
   //    METHODS
 

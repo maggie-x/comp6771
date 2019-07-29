@@ -79,4 +79,22 @@ TEST_CASE("Insert Node", "[Temporary Test]") {
   }
   std::cout << std::endl;
 
+  std::vector<double> v{0.8, 0.11, 0.65, 0.324, 32.234};
+  gdwg::Graph<double,double> test2{v.begin(), v.end()};
+
+  std::cout << test2;
+
+  std::string s1{"Hello"};
+  std::string s2{"how"};
+  std::string s3{"are"};
+  auto e1 = std::make_tuple(s1, s2, 5.4);
+  auto e2 = std::make_tuple(s2, s3, 7.6);
+  auto e = std::vector<std::tuple<std::string, std::string, double>>{e1, e2};
+  gdwg::Graph<std::string, double> b{e.begin(), e.end()};
+
+  std::cout << b;
+
+  gdwg::Graph<std::string, double> c{"red", "orange", "yellow", "blue"};
+  std::cout << c;
+
 }
