@@ -34,36 +34,34 @@ class Graph {
       }
 
       bool InsertOutgoing(std::shared_ptr<N> dst, const E &weight) { // pass in shared ptr after finding node in set of nodes
-          std::cout << "InsertOutgoing(" << *dst << ", " << weight << ")" << std::endl;
+          // std::cout << "InsertOutgoing(" << *dst << ", " << weight << ")" << std::endl;
           Edge e = std::make_pair(dst, weight);
           auto result = edges_.insert(e);
-          std::cout << *val << " has edges: " << edges_.size() << std::endl;
+          // std::cout << *val << " has edges: " << edges_.size() << std::endl;
           return result.second;
       }
 
       void CleanOutgoing(const N &src) {
-          std::cout << "CleanOutgoing(" << src << ")" << std::endl;
-          auto it = edges_.cbegin();
-          while (it != edges_.cend()) {
-
-              std::cout << " *(it->first): " << *(it->first) << std::endl;
-              
-              if (*(it->first) == src) { // found a dst which is an src
-                  edges_.erase(it++);
-              } else {
-                  ++it;
-              }
+        // std::cout << "CleanOutgoing(" << src << ")" << std::endl;
+        auto it = edges_.cbegin();
+        while (it != edges_.cend()) {
+          // std::cout << " *(it->first): " << *(it->first) << std::endl;
+          
+          if (*(it->first) == src) { // found a dst which is an src
+              edges_.erase(it++);
+          } else {
+              ++it;
           }
+        }
       }
 
       bool HasOutgoing(const N &dst) {
-          for (auto it = edges_.cbegin(); it != edges_.cend(); ++it) {
-              if (*(it->first) == dst) {
-                  return true;
-              }
+        for (auto it = edges_.cbegin(); it != edges_.cend(); ++it) {
+          if (*(it->first) == dst) {
+              return true;
           }
-
-          return false;
+        }
+        return false;
       }
 
       std::set<N> GetOutgoing() {
@@ -87,7 +85,7 @@ class Graph {
       }
 
       friend std::ostream& operator<<(std::ostream &os, const Node &node) {
-          std::cout << "number of edges for node " << *(node.val) << " is " << node.edges_.size() << std::endl;
+          // std::cout << "number of edges for node " << *(node.val) << " is " << node.edges_.size() << std::endl;
           os << *(node.val) << " (" << std::endl;
           for (auto it = node.edges_.cbegin(); it != node.edges_.cend(); ++it) {
               os << "  " << *((*it).first) << " | " <<  (*it).second << std::endl;
@@ -123,8 +121,12 @@ class Graph {
     }
   }
 
-  
+  // // COPY CONSTRUCTOR
+  // Graph(const Graph<N, E> &g) : nodes_(g.nodes_) {
+  //   // each node needs its own N on the heap now...
+  // }
 
+  ~Graph() = default;
   //    METHODS
 
   // inserts node into a graph
@@ -206,14 +208,14 @@ bool Graph<N,E>::DeleteNode(const N& val) {
     auto it = nodes_.begin();
     while (it != nodes_.end()) {
 
-        auto clean_node = *it;
-        clean_node.CleanOutgoing(val);
-        nodes_.erase(it++);
-        nodes_.insert(clean_node);
-        
+      auto clean_node = *it;
+      clean_node.CleanOutgoing(val);
+      nodes_.erase(it++);
+      auto result = nodes_.insert(clean_node);
+      if (result.second == false) return false;
     }
 
-    return false;
+    return true;
 }
 
 template <typename N, typename E>
