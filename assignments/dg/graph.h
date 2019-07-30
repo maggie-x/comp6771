@@ -8,6 +8,7 @@
 #include <tuple>
 #include <set>
 #include <utility>
+#include <algorithm>
 
 namespace gdwg {
 
@@ -32,24 +33,56 @@ class Graph {
         }
 
         bool InsertOutgoing(std::shared_ptr<N> dst, const E &weight) { // pass in shared ptr after finding node in set of nodes
-            std::cout << "number of edges for node " << *val << " is " << edges_.size() << std::endl;
-            std::cout << "  inserting new outgoing edge" << std::endl;
-            std::cout << "  making pair from" << dst << " " << weight << std::endl;
+            std::cout << "InsertOutgoing(" << *dst << ", " << weight << ")" << std::endl;
             Edge e = std::make_pair(dst, weight);
             auto result = edges_.insert(e);
-            std::cout << "number of edges for node " << *val << " is " << edges_.size() << std::endl;
+            std::cout << *val << " has edges: " << edges_.size() << std::endl;
             return result.second;
         }
 
         void CleanOutgoing(const N &src) {
+            std::cout << "CleanOutgoing(" << src << ")" << std::endl;
             auto it = edges_.cbegin();
             while (it != edges_.cend()) {
-                if (it->second == src) { // found a dst which is an src
+
+                std::cout << " *(it->first): " << *(it->first) << std::endl;
+                
+                if (*(it->first) == src) { // found a dst which is an src
                     edges_.erase(it++);
                 } else {
                     ++it;
                 }
             }
+        }
+
+        bool HasOutgoing(const N &dst) {
+            for (auto it = edges_.cbegin(); it != edges_.cend(); ++it) {
+                if (*(it->first) == dst) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        std::set<N> GetOutgoing() {
+          std::set<N> outgoing;
+          for (auto it = edges_.cbegin(); it != edges_.cend(); ++it) {
+              outgoing.emplace(*(it->first));
+          }
+
+          return outgoing;
+        }
+
+        std::vector<E> GetDestWeights(const N &dst) {
+          std::vector<E> weights;
+          for (auto it = edges_.cbegin(); it != edges_.cend(); ++it) {
+            if (*(it->first) == dst){
+              weights.emplace_back(it->second);
+            }
+          }
+          std::sort(weights.begin(), weights.end());
+          return weights;
         }
 
         friend std::ostream& operator<<(std::ostream &os, const Node &node) {
@@ -77,25 +110,25 @@ class Graph {
   bool InsertEdge(const N& src, const N& dst, const E& w);
   // deletes node
   bool DeleteNode(const N&);
- /* bool Replace(const N& oldData, const N& newData);
-  void MergeReplace(const N& oldData, const N& newData)
-  void Clear()*/
+  bool Replace(const N& oldData, const N& newData);
+//   void MergeReplace(const N& oldData, const N& newData)
+  void Clear();
   bool IsNode(const N& val);
-  // bool IsConnected(const N& src, const N& dst);
-  /*std::vector<N> GetNodes()
-  std::vector<N> GetConnected(const N& src)
-  std::vector<E> GetWeights(const N& src, const N& dst)
-  const_iterator find(const N&, const N&, const E&);
-  bool erase(const N& src, const N& dst, const E& w)
-  const_iterator erase(graph_const_iterator it);
-  const_iterator begin();
-  const_iterator end();
-  const_iterator rbegin();
-  const_iterator rend();
-  const_iterator cbegin();
-  const_iterator cend();
-  const_iterator crbegin();
-  const_iterator crend();*/
+  bool IsConnected(const N& src, const N& dst);
+  std::vector<N> GetNodes();
+  std::vector<N> GetConnected(const N& src);
+  std::vector<E> GetWeights(const N& src, const N& dst);
+//   const_iterator find(const N&, const N&, const E&);
+//   bool erase(const N& src, const N& dst, const E& w)
+//   const_iterator erase(graph_const_iterator it);
+//   const_iterator begin();
+//   const_iterator end();
+//   const_iterator rbegin();
+//   const_iterator rend();
+//   const_iterator cbegin();
+//   const_iterator cend();
+//   const_iterator crbegin();
+//   const_iterator crend();
 
   // FRIENDS
 
@@ -165,26 +198,46 @@ bool Graph<N,E>::InsertEdge(const N& src, const N& dst, const E& w) {
 
 template <typename N, typename E>
 bool Graph<N,E>::DeleteNode(const N& val) {
+    std::cout << "-- DeleteNode(" << val << ")" << std::endl;
     if (!IsNode(val)) return false; // if the node doesn't exist, there's nothing to delete
 
     auto val_it = nodes_.find(Node{val});
     nodes_.erase(val_it); 
-     // then delete all the other shared_ptrs so no memory leak
-    
-    for (auto it = nodes_.begin(); it != nodes_.end(); ++it) {
 
-        auto curr_node = *it;
-        curr_node.CleanOutgoing(val);
+     // then delete all the other shared_ptrs so ref_count == 0
+     // and underlying object deleted ie no memory leak
+    
+    auto it = nodes_.begin();
+    while (it != nodes_.end()) {
+
+        auto clean_node = *it;
+        clean_node.CleanOutgoing(val);
+        nodes_.erase(it++);
+        nodes_.insert(clean_node);
         
     }
 
-    // for (typename std::set<Edge>::iterator it = edges_.begin(); it != edges_.end(); ++it) {
-    //     if (std::get<0>(*it) == val || std::get<1>(*it) == val) { // if any of the connecting nodes in the edges is the node we're deleting, just delete the edge
-    //         delete *it;
-    //     }
-    // }
-    
-    // delete all edge entries involving this node
+    return false;
+}
+
+template <typename N, typename E>
+bool Graph<N,E>::Replace(const N& oldData, const N& newData) {
+    if (!IsNode(oldData)) {
+        throw std::runtime_error("Cannot call Graph::Replace on a node that doesn't exist");
+    }
+
+
+    if (IsNode(newData)) {
+        return false;
+    }
+
+    auto replace_it = nodes_.find(Node{oldData});
+    auto replace_node = *replace_it;
+    nodes_.erase(replace_it);
+    *(replace_node.val) = newData;
+    auto result = nodes_.insert(replace_node);
+
+    return result.second;
 }
 
 template <typename N, typename E>
@@ -192,6 +245,66 @@ bool Graph<N,E>::IsNode(const N &val) {
     return nodes_.find(Node{val}) != nodes_.end();
 }
 
+
+// template <typename N, typename E>    
+// void Graph<N,E>::MergeReplace(const N& oldData, const N& newData) {}
+
+
+template <typename N, typename E>
+void Graph<N,E>::Clear() {
+
+    /* will call destructors on all fields and child classes (i believe)
+    and since we are using smart pointers, underlying object will be
+    clean up automatically*/
+    nodes_.clear();
+}
+
+template <typename N, typename E>
+bool Graph<N,E>::IsConnected(const N& src, const N& dst){
+
+    if (!IsNode(src) || !IsNode(dst)) {
+        throw std::runtime_error("Cannot call Graph::IsConnected if src or dst node don't exist in the graph");
+    }
+
+    auto src_node = *(nodes_.find(Node{src}));
+
+    return src_node.HasOutgoing(dst);
+
+}
+
+template <typename N, typename E>
+std::vector<N> Graph<N,E>::GetNodes() {
+  std::vector<N> vector_of_nodes;
+  for (auto it = nodes_.cbegin(); it != nodes_.cend(); ++it) {
+    vector_of_nodes.emplace_back((*(it->val)));
+  }
+
+  std::sort(vector_of_nodes.begin(), vector_of_nodes.end());
+  return vector_of_nodes;
+}
+
+template <typename N, typename E>
+std::vector<N> Graph<N,E>::GetConnected(const N& src) {
+  if (!IsNode(src)) {
+    throw std::out_of_range("Cannot call Graph::GetConnected if src doesn't exist in the graph");
+  }
+  auto src_node = *(nodes_.find(Node{src}));
+  auto connected_set = src_node.GetOutgoing();
+  std::vector<N> connected_vector(connected_set.begin(), connected_set.end());
+  return connected_vector;
+
+}
+
+template <typename N, typename E>
+std::vector<E> Graph<N,E>::GetWeights(const N& src, const N& dst) {
+  if (!IsNode(src) || !IsNode(dst)) {
+    throw std::out_of_range("Cannot call Graph::GetWeights if src or dst node don't exist in the graph");
+  }
+
+  auto src_node = *(nodes_.find(Node{src}));
+  return src_node.GetDestWeights(dst);
+
+}
 
 }  // namespace gdwg
 

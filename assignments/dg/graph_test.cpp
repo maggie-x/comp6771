@@ -25,4 +25,58 @@ TEST_CASE("Insert Node", "[Temporary Test]") {
 
   std::cout << test;
 
+  test.DeleteNode('q');
+
+  std::cout << test;
+
+  test.InsertNode('x');
+  test.InsertNode('y');
+  test.InsertEdge('x', 'y', 9);
+  test.InsertEdge('y', 'x', -9);
+  test.InsertEdge('y', 'x', -99);
+
+
+  std::cout << test;
+
+  // test.DeleteNode('x');
+  //     std::cout << test;
+
+
+  // test.Replace('x', '&');
+  // std::cout << test;
+
+  // test.Clear();
+  // std::cout << test;
+
+  REQUIRE(test.IsConnected('x', 'y') == true);
+
+  auto nodes = test.GetNodes();
+
+  for (auto it = nodes.begin(); it != nodes.end(); ++it) {
+    std::cout << *it << " ";
+  }
+
+  std::cout << std::endl;
+
+  test.InsertNode('1');
+  test.InsertNode('2');
+  test.InsertNode('3');
+  test.InsertEdge('y', '1', 1);
+  test.InsertEdge('y', '2', 2);
+  test.InsertEdge('y', '3', 3);
+  std::cout << test;
+
+  auto connected = test.GetConnected('y');
+  for (auto it = connected.begin(); it != connected.end(); ++it) {
+    std::cout << *it << " ";
+  }
+  std::cout << std::endl;
+
+
+  auto weights = test.GetWeights('y', 'x');
+  for (auto it = weights.begin(); it != weights.end(); ++it) {
+    std::cout << *it << " ";
+  }
+  std::cout << std::endl;
+
 }
