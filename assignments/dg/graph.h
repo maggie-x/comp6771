@@ -138,17 +138,28 @@ class Graph {
             // checking nodes
             if (g2.nodes_.find(n) != g2.nodes_.end()) {
                 auto n2_iterator = g2.nodes_.find(n);
-                auto n2 = *n2_iterator;
+                auto n2 = *n2_iterator;     // this is the corresponding node in g2
                 // check edges
                 for (auto e : n.edges_) {
                     // if the corresponding node in the second graph has the same edge, continue checking
                     // if it doesn't the graphs are not equal so return false
-                    if (n2.edges_.find(e) != n2.edges_.end()) continue;
-                    else return false;
+                    auto weight = e.second;
+                    // iterate through the corresponding node in the second graph to find the same edge
+                    int found = 0;          // THIS IS TYPE PUNNING, REPLACE WITH OTHER METHOD OR LOSE MARKS
+                    for (auto e2 : n2.edges_) {
+                        if (e2.second == weight) {
+                            found = 1;
+                            break; // POTENTIAL BUG HERE, can have 1 edge in g2 correspond to multiple edges in g1
+                        }
+                    }
+                    if (found == 0) return false; // this means we went through all edges in n2 and didn't find one with the same weight
                 }
             }
             // if the second graph doesn't contain the same node, return false
-            else return false;
+            else {
+                std::cout << "catch 2" << std::endl;
+                return false;
+            }
         }
         return true;
     }
