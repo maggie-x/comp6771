@@ -145,19 +145,16 @@ class Graph {
                     // if it doesn't the graphs are not equal so return false
                     auto weight = e.second;
                     // iterate through the corresponding node in the second graph to find the same edge
-                    int found = 0;          // THIS IS TYPE PUNNING, REPLACE WITH OTHER METHOD OR LOSE MARKS
+                    unsigned long count = 0;
                     for (auto e2 : n2.edges_) {
-                        if (e2.second == weight) {
-                            found = 1;
-                            break; // POTENTIAL BUG HERE, can have 1 edge in g2 correspond to multiple edges in g1
-                        }
+                        if (e2.second == weight) break;
+                        count++;
+                        if (count == n2.edges_.size()) return false; // if we reach the end of n2 then the edge doesnt exist
                     }
-                    if (found == 0) return false; // this means we went through all edges in n2 and didn't find one with the same weight
                 }
             }
             // if the second graph doesn't contain the same node, return false
             else {
-                std::cout << "catch 2" << std::endl;
                 return false;
             }
         }

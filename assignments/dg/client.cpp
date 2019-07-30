@@ -34,7 +34,7 @@ int main() {
   g2.InsertEdge("how", "you?", 1);
   g2.InsertEdge("how", "hello", 4);
 
-  g2.InsertEdge("are", "you?", 3);
+  g2.InsertEdge("are", "you?", 0);
 
   if (g == g2) std::cout << "success" << std::endl;
 
