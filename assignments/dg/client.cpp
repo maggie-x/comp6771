@@ -21,23 +21,6 @@ int main() {
 
   g.InsertEdge("are", "you?", 3);
 
-  gdwg::Graph<std::string, int> g2;
-  g2.InsertNode("hello");
-  g2.InsertNode("how");
-  g2.InsertNode("are");
-  g2.InsertNode("you?");
-
-  g2.InsertEdge("hello", "how", 5);
-  g2.InsertEdge("hello", "are", 8);
-  g2.InsertEdge("hello", "are", 2);
-
-  g2.InsertEdge("how", "you?", 1);
-  g2.InsertEdge("how", "hello", 4);
-
-  g2.InsertEdge("are", "you?", 0);
-
-  if (g == g2) std::cout << "success" << std::endl;
-
   /*
 
   std::cout << g << '\n';
