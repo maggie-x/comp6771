@@ -74,6 +74,7 @@ class Graph {
       }
 
       std::vector<E> GetDestWeights(const N &dst) {
+        std::cout << *this;
         std::vector<E> weights;
         for (auto it = edges_.cbegin(); it != edges_.cend(); ++it) {
           if (*(it->first) == dst){

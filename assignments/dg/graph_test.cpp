@@ -54,7 +54,10 @@ SCENARIO("a default constructed graph") {
 
 SCENARIO("a initialiser list constructed graph") {
   gdwg::Graph<std::string, double> graph{"red", "orange", "yellow", "green", "blue", "indigo", "violet"};
-  std::vector<std::string> colours{"red", "orange", "yellow", "green", "blue", "indigo", "violet"};
+  std::cout << graph;
+
+  // since the nodes will be sorted
+  std::vector<std::string> colours{"blue", "green", "indigo", "orange", "red", "violet", "yellow" };
   REQUIRE(isEqual(graph.GetNodes(), colours));
 }
 
