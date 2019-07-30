@@ -59,6 +59,19 @@ SCENARIO("a initialiser list constructed graph") {
   // since the nodes will be sorted
   std::vector<std::string> colours{"blue", "green", "indigo", "orange", "red", "violet", "yellow" };
   REQUIRE(isEqual(graph.GetNodes(), colours));
+
+  WHEN("multiple edges are added between two nodes") {
+    graph.InsertEdge("violet", "yellow", 0.8);
+    graph.InsertEdge("violet", "yellow", 0.7);
+    graph.InsertEdge("violet", "yellow", 0.6);
+    graph.InsertEdge("violet", "yellow", 0.5);
+    graph.InsertEdge("violet", "yellow", 0.4);
+    graph.InsertEdge("violet", "yellow", 0.3);
+    graph.InsertEdge("violet", "yellow", 0.2);
+    graph.InsertEdge("violet", "yellow", 0.1);
+
+    std::cout << graph;
+  }
 }
 
 SCENARIO("A graph initialised with values from a vector (provided by a start and end iterator)") {
@@ -154,5 +167,11 @@ SCENARIO("a graph initialised from a vector of tuples in the form <src, dst, wei
     REQUIRE(isEqual(aus.GetWeights("perth", "adelaide"), std::vector<double>{25.9}));
     REQUIRE(isEqual(aus.GetWeights("sydney", "adelaide"), std::vector<double>{4.7}));
     REQUIRE(isEqual(aus.GetWeights("adelaide", "brisbane"), std::vector<double>{2.3}));
+  }
+
+  WHEN("we use our custom iterator") {
+    for (auto it = aus.begin(); it != aus.end(); ++it){
+      std::cout << "<" << std::get<0>(*it) << ", " << std::get<1>(*it) << ", " << std::get<2>(*it) << std::endl;
+    }
   }
 }
