@@ -15,7 +15,6 @@ namespace gdwg {
 template <typename N, typename E>
 class Graph {
 
-
  public:
 
     struct Node {
@@ -100,6 +99,33 @@ class Graph {
 
   // FRIENDS
 
+    friend bool operator==(const gdwg::Graph<N, E>& g1, const gdwg::Graph<N, E>& g2) {
+        // check both graphs have same nodes and edges
+        for (auto n : g1.nodes_) {
+            // checking nodes
+            if (g2.nodes_.find(n) != g2.nodes_.end()) {
+                auto n2_iterator = g2.nodes_.find(n);
+                auto n2 = *n2_iterator;
+                // check edges
+                for (auto e : n.edges_) {
+                    // if the corresponding node in the second graph has the same edge, continue checking
+                    // if it doesn't the graphs are not equal so return false
+                    if (n2.edges_.find(e) != n2.edges_.end()) continue;
+                    else return false;
+                }
+            }
+            // if the second graph doesn't contain the same node, return false
+            else return false;
+        }
+        return true;
+    }
+
+    // using previously define == operator
+    friend bool operator!=(const gdwg::Graph<N, E>& g1, const gdwg::Graph<N, E>& g2) {
+        if (g1 == g2) return false;
+        return true;
+    }
+
     friend std::ostream& operator<<(std::ostream &os, const Graph<N, E> &graph) {
         std::cout << "--- PRINTING OUT GRAPH --- " << std::endl;
         std::cout << "nodes in graph: " << graph.nodes_.size() << std::endl;
@@ -145,7 +171,7 @@ bool Graph<N,E>::DeleteNode(const N& val) {
     nodes_.erase(val_it); 
      // then delete all the other shared_ptrs so no memory leak
     
-    for (auto it = nodes_.begin(); it !+ nodes_.end(); ++it) {
+    for (auto it = nodes_.begin(); it != nodes_.end(); ++it) {
 
         auto curr_node = *it;
         curr_node.CleanOutgoing(val);
@@ -166,52 +192,6 @@ bool Graph<N,E>::IsNode(const N &val) {
     return nodes_.find(Node{val}) != nodes_.end();
 }
 
-/*bool Graph<N, E>::InsertNode(const N &val) {
-  if (this->IsNode(val) == false) {
-    auto new_node_ptr = std::make_unique<N>(val);
-    E empty{};
-    Edge new_node{new_node_ptr, empty};
-
-    std::cout << "value unique ptr : " << *new_node_ptr;
-    std::cout << "empty: " << empty;
-
-    std::vector<Edge> new_vertex{new_node};
-
-    Node new_vertex_ptr = std::make_unique<std::vector<Edge>>(new_vertex); // does this make a copy of the object?
-    adj_list_.emplace_back(new_vertex_ptr);
-
-    this->object_map_[val] = new_node_ptr; // add this mapping of object value to 
-
-    return true;
-  }
-
-  return false;
-}*/
-
-template <typename N, typename E>
-bool operator==(const gdwg::Graph<N, E>& g1, const gdwg::Graph<N, E>& g2) {
-    // check each node exists
-    for (N n : g1.nodes_) {
-        if (g2.nodes_.contains(n)) continue;
-        else return false;
-    }
-
-    // check each edge exists
-    for (std::tuple<std::shared_ptr<N>, std::shared_ptr<N>, E> e : g1.edges_) {
-        if (g2.edges_.contains(e)) continue;
-        else return false;
-    }
-
-    // if we reach here then that means each edge/node exists in both graphs
-    return true;
-}
-
-template <typename N, typename E>
-bool operator!=(const gdwg::Graph<N, E>& g1, const gdwg::Graph<N, E>& g2) {
-    // using previously defined == operator
-    if (g1 == g2) return false;
-    return true;
-}
 
 }  // namespace gdwg
 
