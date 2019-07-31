@@ -17,6 +17,9 @@ template <typename N, typename E>
 class Graph {
  public:
  typedef std::pair<std::shared_ptr<N>, std::shared_ptr<E>> Edge;
+
+    // Custom Comparator used to sort the set of Edges 
+    // based on Node then weight, in our Node class
     struct edge_set_comparator {
       bool operator() (const Edge& a, const Edge &b) const {
         if (*(a.first) == *(b.first)) {
@@ -124,83 +127,94 @@ class Graph {
     using difference_type = std::ptrdiff_t;
     using value_type = std::tuple<N, N, E>;
     using pointer = std::tuple<const N&, const N&, const E&>*;
-    using reference = std::tuple<const N&, const N&, const E&>&;
+    using reference = std::tuple<const N&, const N&, const E&>;
     using iterator_category = std::bidirectional_iterator_tag;
 
-    explicit const_iterator(typename std::set<Node>::const_iterator nodes_pos, typename std::set<Edge> edges_pos) 
+    explicit const_iterator(typename std::set<Node>::const_iterator nodes_pos, typename std::set<Edge>::const_iterator edges_pos) 
     : node_it_{ nodes_pos }, 
       edge_it_{ edges_pos } {};
 
     reference operator*() const { 
-      curr = std::make_tuple(node_it_->val, *(edge_it_->first), *(edge_it_->second));
-      return curr;
+      return {*(node_it_->val), *(edge_it_->first), *(edge_it_->second)};
     };
-    pointer operator->() const { return &(operator*()); };
+    // pointer operator->() const { return &(operator*()); };
 
     reference operator++() { 
       ++edge_it_;
 
-      if (edge_it_ == node_it_->edges_.cend()) {
+      if (edge_it_ == node_it_->edges_.end()) {
         ++node_it_;
-        edge_it_ = node_it_->edges_.cbegin();
+
+        // only iterating over edges, so if node has no edges, skip
+        while(node_it_->edges_.size() == 0) { 
+          ++node_it_;
+        }
+        edge_it_ = node_it_->edges_.begin();
       }
 
-      return *this;
+        // std::cout << "node_it_ is at " << *(node_it_->val) << std::endl;
+        // std::cout << "edge_it_ is at " << *(edge_it_->first) << std::endl;
+
+      return {*(node_it_->val), *(edge_it_->first), *(edge_it_->second)};
     }; // pre is the first one
     const_iterator operator++(int) { auto cpy {*this}; operator++(); return cpy; }; // post is the second
 
     reference operator--() { 
-      if (edge_it_ == node_it_->edges_.cbegin()) {
+      if (edge_it_ == node_it_->edges_.begin()) { // == begin
         --node_it_;
-        edge_it_ = node_it_->edges_.cend();
+        edge_it_ = node_it_->edges_.end(); // == end
       } else {
         --edge_it_;
       }
-      return *this;
+      // std::cout << "node_it_ is at " << *(node_it_->val) << std::endl;
+      // std::cout << "edge_it_ is at " << *(edge_it_->first) << std::endl;
+      return {*(node_it_->val), *(edge_it_->first), *(edge_it_->second)};
     };
     const_iterator operator--(int) { auto cpy {*this}; operator--(); return cpy; };
   
     friend bool operator==(const_iterator a, const_iterator b) {
-      return *a == *b;
+      return a.node_it_ == b.node_it_ && a.edge_it_ == b.edge_it_;
     }
 
     friend bool operator!=(const_iterator a, const_iterator b){
-      return *a != *b;
+      return !(a == b);
     }
 
     private:
       typename std::set<Node>::const_iterator node_it_;
       typename std::set<Edge>::const_iterator edge_it_;
-      std::tuple<N, N, E> &curr;
-
   }; 
 
-  using const_iterator = const_iterator;
+  // using const_iterator = const_iterator;
   using const_reverse_iterator = std::reverse_iterator<const_iterator>;
-
-  const_iterator begin() { return cbegin(); }
-  const_iterator end() { return cend(); }
-  const_iterator rbegin() { return crbegin(); }
-  const_iterator rend() { return crend(); }
+  
   const_iterator cbegin() {
-    return const_iterator(nodes_.cbegin(), nodes_.cbegin()->cbegin());
+    // std::cout << nodes_.size() << std::endl;
+    return const_iterator{nodes_.begin(), (nodes_.begin())->edges_.begin()};
   }
   const_iterator cend() {
-    return const_iterator(nodes_.cend(), nodes_.cend()->edges_.cend());
+    // std::cout << (--(nodes_.end()))->edges_.size() << std::endl;
+    return const_iterator{nodes_.end(), (nodes_.end())->edges_.begin()};
   }
-  const_iterator crbegin() { return cend(); }
-  const_iterator crend() { return cbegin(); }
+  const_iterator begin() { return cbegin(); }
+  const_iterator end() { return cend(); }
+  const_reverse_iterator crbegin() { return const_reverse_iterator{cend()}; }
+  const_reverse_iterator crend() { return const_reverse_iterator{cbegin()};  }
+  const_reverse_iterator rbegin() { return crbegin(); }
+  const_reverse_iterator rend() { return crend(); }
 
-  const_iterator find(const N& a, const N& b, const E& weight) {
-    auto a_node = nodes_.find(Node{a});
-    auto b_node = a_node.edges_.findEdge(b, weight);
+  
 
-    if (a_node == nodes_.end() || b_node == nodes_.end()) {
-      return cend();
-    }
+  // const_iterator find(const N& a, const N& b, const E& weight) {
+  //   auto a_node = nodes_.find(Node{a});
+  //   auto b_node = a_node.edges_.findEdge(b, weight);
 
-    return const_iterator(a_node, b_node);
-  }
+  //   if (a_node == nodes_.end() || b_node == nodes_.end()) {
+  //     return cend();
+  //   }
+
+  //   return const_iterator(a_node, b_node);
+  // }
   // bool erase(const N& src, const N& dst, const E& w);
   // const_iterator erase(graph_const_iterator it);
   
