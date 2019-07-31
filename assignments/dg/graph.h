@@ -312,7 +312,7 @@ class Graph {
 private:
     std::set<Node> nodes_;
     // std::set<Edge> edges_;
-};
+}w;
 
 
 
