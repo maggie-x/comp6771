@@ -167,28 +167,23 @@ class Graph {
 
       return *this;
     }; // pre is the first one
-    const_iterator operator++(int) { auto cpy {*this}; operator++(); return cpy; }; // post is the second
+      const_iterator operator++(int) { auto cpy {*this}; operator++(); return cpy; }; // post is the second
 
-    const_iterator& operator--() {
-        if (node_it_ == node_it_.begin()) {
-            // edge case
-        }
-        if (edge_it_ == node_it_->edges_.begin()) { // == begin
-            // --node_it_;
-            std::advance(node_it_, -1);
-            while(node_it_->edges_.size() == 0) {
-                // ++node_it_;
-                std::advance(node_it_, -1);
-            }
-            edge_it_ = node_it_->edges_.end(); // == end
-        } else {
-            std::advance(edge_it_, -1);
-        // --edge_it_;
-        }
-      // std::cout << "node_it_ is at " << *(node_it_->val) << std::endl;
-      // std::cout << "edge_it_ is at " << *(edge_it_->first) << std::endl;
-      return *this;
-    };
+      const_iterator& operator--() {
+          if (edge_it_ == node_it_->edges_.begin()) { // == begin
+              --node_it_;
+
+              while(node_it_->edges_.size() == 0) {
+                  --node_it_;
+              }
+
+              edge_it_ = node_it_->edges_.end(); // == end
+          }
+          --edge_it_;
+          // std::cout << "node_it_ is at " << *(node_it_->val) << std::endl;
+          // std::cout << "edge_it_ is at " << *(edge_it_->first) << std::endl;
+          return *this;
+      };
     const_iterator operator--(int) { auto cpy {*this}; operator--(); return cpy; };
   
     friend bool operator==(const_iterator a, const_iterator b) {
@@ -453,7 +448,7 @@ void Graph<N,E>::MergeReplace(const N& oldData, const N& newData) {
 
     // iterate through each edge in the old node and replace with edge sourcing from the new node
     for (Edge e : old_node_copy.edges_) {
-        InsertEdge(new_node, e.first, e.second);        // insert a new edge from the replacing node to the previous dst
+        InsertEdge(*(new_node.val), *(e.first), *(e.second));        // insert a new edge from the replacing node to the previous dst
     }
 
     // now we need to connect all the incoming edges to the replacing node
@@ -461,7 +456,7 @@ void Graph<N,E>::MergeReplace(const N& oldData, const N& newData) {
     for (auto n : nodes_) {
         for (auto e : n.edges_) {        // iterating through each edge in the node
             if (*(e.first) == oldData) {
-                InsertEdge(n, new_node, *(e.second));   // insert the new edge
+                InsertEdge(*(n.val), *(new_node.val), *(e.second));   // insert the new edge
                 n.edges_.erase(e);                      // delete the old edge
             }
         }
