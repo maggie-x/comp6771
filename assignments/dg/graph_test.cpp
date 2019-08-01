@@ -3,14 +3,18 @@
   == Explanation and rational of testing ==
 
 TODO: 
-[ ] change E to a smart pointer
-[ ] sort the edges in a smarter way? instead of doing it before we return
+[x] change E to a smart pointer
+[x] sort the edges in a smarter way? instead of doing it before we return
 [ ] HOW TO TEST individual methods when we don't have access to private fields
     to check if the operation was actually successful
+[ ] reverse iterator 
+- (automatic decrement or we have to implement ourselves?)
+- returning reference in post-increment/decrement
+- do we need a pointer type for our iterator?
 [ ] clean up some code
-
-
 */
+
+
 
 #include "assignments/dg/graph.h"
 #include "catch.h"
@@ -188,10 +192,10 @@ SCENARIO("a graph initialised from a vector of tuples in the form <src, dst, wei
 
   }
 
-  // WHEN("we use our custom iterator in the reverse direction") {
-  //   for (auto rit = aus.rbegin(); rit != aus.rend(); ++rit) {
-  //     std::cout << "<" << std::get<0>(*rit) << ", " << std::get<1>(*rit) << ", " << std::get<2>(*rit) << ">" << std::endl;
+  WHEN("we use our custom iterator in the reverse direction") {
+    for (auto rit = aus.rbegin(); rit != aus.rend(); ++rit) {
+      std::cout << "<" << std::get<0>(*(rit)) << ", " << std::get<1>(*rit) << ", " << std::get<2>(*rit) << ">" << std::endl;
 
-  //   }
-  // }
+    }
+  }
 }

@@ -9,6 +9,7 @@
 #include <set>
 #include <utility>
 #include <algorithm>
+#include <iterator>
 
 namespace gdwg {
 
@@ -125,7 +126,7 @@ class Graph {
     public:
     friend class Graph;
     using difference_type = std::ptrdiff_t;
-    using value_type = std::tuple<N, N, E>;
+    using value_type = std::tuple<const N, const N, const E>;
     using pointer = std::tuple<const N&, const N&, const E&>*;
     using reference = std::tuple<const N&, const N&, const E&>;
     using iterator_category = std::bidirectional_iterator_tag;
@@ -137,17 +138,18 @@ class Graph {
     reference operator*() const { 
       return {*(node_it_->val), *(edge_it_->first), *(edge_it_->second)};
     };
-    // pointer operator->() const { return &(operator*()); };
+    pointer operator->() const { return &(operator*()); };
 
-    reference operator++() { 
+    const_iterator& operator++() { 
       ++edge_it_;
 
       if (edge_it_ == node_it_->edges_.end()) {
-        ++node_it_;
-
+        // ++node_it_;
+        std::advance(node_it_, 1);
         // only iterating over edges, so if node has no edges, skip
         while(node_it_->edges_.size() == 0) { 
-          ++node_it_;
+          // ++node_it_;
+          std::advance(node_it_, 1);
         }
         edge_it_ = node_it_->edges_.begin();
       }
@@ -155,20 +157,23 @@ class Graph {
         // std::cout << "node_it_ is at " << *(node_it_->val) << std::endl;
         // std::cout << "edge_it_ is at " << *(edge_it_->first) << std::endl;
 
-      return {*(node_it_->val), *(edge_it_->first), *(edge_it_->second)};
+      return *this;
     }; // pre is the first one
     const_iterator operator++(int) { auto cpy {*this}; operator++(); return cpy; }; // post is the second
 
-    reference operator--() { 
+    const_iterator& operator--() { 
       if (edge_it_ == node_it_->edges_.begin()) { // == begin
-        --node_it_;
+        // --node_it_;
+        std::advance(node_it_, -1);
+
         edge_it_ = node_it_->edges_.end(); // == end
       } else {
-        --edge_it_;
+        std::advance(edge_it_, -1);
+        // --edge_it_;
       }
       // std::cout << "node_it_ is at " << *(node_it_->val) << std::endl;
       // std::cout << "edge_it_ is at " << *(edge_it_->first) << std::endl;
-      return {*(node_it_->val), *(edge_it_->first), *(edge_it_->second)};
+      return *this;
     };
     const_iterator operator--(int) { auto cpy {*this}; operator--(); return cpy; };
   
