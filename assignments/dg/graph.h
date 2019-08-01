@@ -144,12 +144,10 @@ class Graph {
       ++edge_it_;
 
       if (edge_it_ == node_it_->edges_.end()) {
-        // ++node_it_;
-        std::advance(node_it_, 1);
+        ++node_it_;
         // only iterating over edges, so if node has no edges, skip
         while(node_it_->edges_.size() == 0) { 
-          // ++node_it_;
-          std::advance(node_it_, 1);
+          ++node_it_;
         }
         edge_it_ = node_it_->edges_.begin();
       }
@@ -163,14 +161,15 @@ class Graph {
 
     const_iterator& operator--() { 
       if (edge_it_ == node_it_->edges_.begin()) { // == begin
-        // --node_it_;
-        std::advance(node_it_, -1);
+        --node_it_;
+
+        while(node_it_->edges_.size() == 0) { 
+          --node_it_;
+        }
 
         edge_it_ = node_it_->edges_.end(); // == end
-      } else {
-        std::advance(edge_it_, -1);
-        // --edge_it_;
-      }
+      } 
+      --edge_it_;
       // std::cout << "node_it_ is at " << *(node_it_->val) << std::endl;
       // std::cout << "edge_it_ is at " << *(edge_it_->first) << std::endl;
       return *this;
