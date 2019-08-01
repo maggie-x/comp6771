@@ -2,16 +2,27 @@
 
   == Explanation and rational of testing ==
 
-TODO: 
+DONE:
 [x] change E to a smart pointer
 [x] sort the edges in a smarter way? instead of doing it before we return
 [ ] HOW TO TEST individual methods when we don't have access to private fields
     to check if the operation was actually successful
-[ ] reverse iterator 
+[x] reverse iterator 
 - (automatic decrement or we have to implement ourselves?)
 - returning reference in post-increment/decrement
 - do we need a pointer type for our iterator?
+
+TODO:
+[ ] more thorough tests
+- using non-primitive types
+
+[ ] check correct errors are being thrown & return types are correct
+[ ] const correctness
 [ ] clean up some code
+
+
+
+
 */
 
 
@@ -19,11 +30,7 @@ TODO:
 #include "assignments/dg/graph.h"
 #include "catch.h"
 
-
-
 #include <algorithm>
-
-// TODO(students): Fill this in.
 
 template<typename T>
 bool isEqual(std::vector<T> const &v1, std::vector<T> const &v2)
@@ -58,7 +65,7 @@ SCENARIO("a default constructed graph") {
 
 SCENARIO("a initialiser list constructed graph") {
   gdwg::Graph<std::string, double> graph{"red", "orange", "yellow", "green", "blue", "indigo", "violet"};
-  std::cout << graph;
+  // std::cout << graph;
 
   // since the nodes will be sorted
   std::vector<std::string> colours{"blue", "green", "indigo", "orange", "red", "violet", "yellow" };
@@ -75,7 +82,7 @@ SCENARIO("a initialiser list constructed graph") {
     graph.InsertEdge("violet", "yellow", 0.1);
 
     // TODO: ENFORCE CHECK THAT THE EDGES ARE IN ORDER 
-    std::cout << graph;
+    // std::cout << graph;
   }
 }
 
@@ -95,7 +102,7 @@ SCENARIO("A graph initialised with values from a vector (provided by a start and
     REQUIRE(graph.Replace(p2, p4));
     REQUIRE(!graph.IsNode(p2));
 
-    std::cout << graph;
+    // std::cout << graph;
 
     // check that all properties of p4 are the same as p2
     // we only change the content of the underlying shared ptr
@@ -112,7 +119,16 @@ SCENARIO("A graph initialised with values from a vector (provided by a start and
     auto connected = graph.GetConnected(p1);
     auto it = std::find(connected.begin(), connected.end(), p2);
     REQUIRE(it == connected.end());
-    std::cout << graph;
+    // std::cout << graph;
+  }
+
+  WHEN("an edge is deleted") {
+    // std::cout << graph;
+    // std::cout << "deleting edge hello - 0.99 - string" << std::endl;
+    REQUIRE(graph.IsConnected("hello", "string"));
+    REQUIRE(graph.erase("hello", "string", 0.99));
+    REQUIRE(!graph.IsConnected("hello", "string"));
+    // std::cout << graph;
   }
 
 }
@@ -140,7 +156,7 @@ SCENARIO("a graph initialised from a vector of tuples in the form <src, dst, wei
     std::vector<std::string> expected{"adelaide", "brisbane", "melbourne", "perth", "sydney"};
     REQUIRE(isEqual(nodes, expected));
     
-    std::cout << aus;
+    // std::cout << aus;
   }
 
   WHEN("we get the connected outgoing nodes from each city (GetConnected)") {
@@ -175,11 +191,11 @@ SCENARIO("a graph initialised from a vector of tuples in the form <src, dst, wei
   }
 
   WHEN("we use our custom iterator in the forward direction") {
-    std::cout << "-- TESTING CUSTOM ITERATOR --" << std::endl;
-    std::cout << aus;
-    for (auto it = aus.cbegin(); it != aus.cend(); ++it){
-      std::cout << "<" << std::get<0>(*it) << ", " << std::get<1>(*it) << ", " << std::get<2>(*it) << ">" << std::endl;
-    }
+    // std::cout << "-- TESTING CUSTOM ITERATOR --" << std::endl;
+    // std::cout << aus;
+    // for (auto it = aus.cbegin(); it != aus.cend(); ++it){
+    //   std::cout << "<" << std::get<0>(*it) << ", " << std::get<1>(*it) << ", " << std::get<2>(*it) << ">" << std::endl;
+    // }
 
     std::vector<std::tuple<std::string, std::string, double>> edges(aus.cbegin(), aus.cend());
     auto t1 = std::make_tuple("adelaide", "brisbane", 2.3);
@@ -193,11 +209,11 @@ SCENARIO("a graph initialised from a vector of tuples in the form <src, dst, wei
   }
 
   WHEN("we use our custom iterator in the reverse direction") {
-    std::cout << "-- TESTING REVERSE ITERATOR --" << std::endl;
-    for (auto rit = aus.rbegin(); rit != aus.rend(); ++rit) {
-      std::cout << "<" << std::get<0>(*(rit)) << ", " << std::get<1>(*rit) << ", " << std::get<2>(*rit) << ">" << std::endl;
+    // std::cout << "-- TESTING REVERSE ITERATOR --" << std::endl;
+    // for (auto rit = aus.rbegin(); rit != aus.rend(); ++rit) {
+    //   std::cout << "<" << std::get<0>(*(rit)) << ", " << std::get<1>(*rit) << ", " << std::get<2>(*rit) << ">" << std::endl;
 
-    }
+    // }
 
     std::vector<std::tuple<std::string, std::string, double>> reverse_edges(aus.crbegin(), aus.crend());
     auto t1 = std::make_tuple("adelaide", "brisbane", 2.3);
@@ -209,4 +225,50 @@ SCENARIO("a graph initialised from a vector of tuples in the form <src, dst, wei
     REQUIRE(reverse_edges == expected);
 
   }
+
+  WHEN("We use find to get an iterator to a particular edge in our graph") {
+    auto it = aus.find("perth", "adelaide", 25.9);
+
+    auto t2 = std::make_tuple("melbourne", "perth", 20.1);
+    auto t3 = std::make_tuple("perth", "adelaide", 25.9);
+    auto t4 = std::make_tuple("sydney", "adelaide", 4.7);
+
+    REQUIRE(*it == t3);
+
+    WHEN("incremented forward") {
+      std::advance(it, 1);
+      REQUIRE(*it == t4);
+    }
+
+    WHEN("decremented backward") {
+      std::advance(it, -1);
+      REQUIRE(*it == t2);
+    } 
+    
+  }
+
+  WHEN("we use find to get an edge that doesn't exist") {
+    // adelaide is now plural, so shouldn't show up
+    REQUIRE(aus.find("perth", "adelaides", 25.9) == aus.end());
+  }
+
+  WHEN("we erase via an iterator on the graph") {
+    // std::cout << aus;
+    auto it = aus.find("perth", "adelaide", 25.9);
+    auto new_it = aus.erase(it);
+    REQUIRE(!aus.IsConnected("perth", "adelaide"));
+    // std::cout << aus;
+
+    auto after = std::make_tuple("sydney", "adelaide", 4.7);
+    REQUIRE(*new_it == after);
+    // std::cout << "new it after erasing <" << std::get<0>(*new_it) << ", " << std::get<1>(*new_it) << ", " << std::get<2>(*new_it) << ">" << std::endl;
+
+    WHEN("we erase by passing in the end, we should get back the end") {
+      REQUIRE(aus.erase(aus.end()) == aus.end());
+    }
+
+  }
+
+
+  
 }
