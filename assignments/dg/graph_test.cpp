@@ -193,8 +193,37 @@ SCENARIO("a graph initialised from a vector of tuples in the form <src, dst, wei
   }
 
   WHEN("we use our custom iterator in the reverse direction") {
+      std::cout << "testing reverse iterator" << std::endl;
     for (auto rit = aus.rbegin(); rit != aus.rend(); ++rit) {
       std::cout << "<" << std::get<0>(*(rit)) << ", " << std::get<1>(*rit) << ", " << std::get<2>(*rit) << ">" << std::endl;
     }
   }
+}
+
+SCENARIO("Testing MergeReplace Function") {
+    GIVEN("A graph initialised from a vector of tuples in the form <src, dst, weight>") {
+        std::string sydney{"sydney"};
+        std::string melbourne{"melbourne"};
+        std::string perth{"perth"};
+        std::string adelaide{"adelaide"};
+        std::string brisbane{"brisbane"};
+
+
+        auto syd_melb = std::make_tuple(sydney, melbourne, 5.4);
+        auto melb_per = std::make_tuple(melbourne, perth, 20.1);
+        auto per_ade = std::make_tuple(perth, adelaide, 25.9);
+        auto syd_ade = std::make_tuple(sydney, adelaide, 4.7);
+        auto ade_bris = std::make_tuple(adelaide, brisbane, 2.3);
+
+
+        auto e = std::vector<std::tuple<std::string, std::string, double>>{syd_melb, melb_per, per_ade, syd_ade, ade_bris};
+        gdwg::Graph<std::string, double> aus{e.begin(), e.end()};
+
+        WHEN("We try to use the MergeReplace function on it") {
+            aus.MergeReplace(sydney, melbourne);
+            THEN("We should get a graph where sydney edges are replaced by melbourne edges") {
+               // REQUIRE()
+            }
+        }
+    }
 }

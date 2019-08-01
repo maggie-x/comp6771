@@ -161,24 +161,25 @@ class Graph {
     }; // pre is the first one
     const_iterator operator++(int) { auto cpy {*this}; operator++(); return cpy; }; // post is the second
 
-    const_iterator& operator--() { 
-      if (edge_it_ == node_it_->edges_.begin()) { // == begin
-        // --node_it_;
-        std::advance(node_it_, -1);
-
-        edge_it_ = node_it_->edges_.end(); // == end
-      } else {
-        std::advance(edge_it_, -1);
+    const_iterator& operator--() {
+        if (node_it_ == node_it_.begin()) {
+            // edge case
+        }
+        if (edge_it_ == node_it_->edges_.begin()) { // == begin
+            // --node_it_;
+            std::advance(node_it_, -1);
+            while(node_it_->edges_.size() == 0) {
+                // ++node_it_;
+                std::advance(node_it_, -1);
+            }
+            edge_it_ = node_it_->edges_.end(); // == end
+        } else {
+            std::advance(edge_it_, -1);
         // --edge_it_;
-      }
+        }
       // std::cout << "node_it_ is at " << *(node_it_->val) << std::endl;
-<<<<<<< HEAD
-      // std::cout << "edge_it_ is at " << *22(edge_it_->first) << std::endl;
-      return {*(node_it_->val), *(edge_it_->first), *(edge_it_->second)};
-=======
       // std::cout << "edge_it_ is at " << *(edge_it_->first) << std::endl;
       return *this;
->>>>>>> 9bd696fc052515352ea51993964823c7571c247e
     };
     const_iterator operator--(int) { auto cpy {*this}; operator--(); return cpy; };
   
@@ -279,7 +280,7 @@ class Graph {
   // deletes node
   bool DeleteNode(const N&);
   bool Replace(const N& oldData, const N& newData);
-//   void MergeReplace(const N& oldData, const N& newData)
+  void MergeReplace(const N& oldData, const N& newData);
   void Clear();
   bool IsNode(const N& val);
   bool IsConnected(const N& src, const N& dst);
@@ -406,14 +407,54 @@ bool Graph<N,E>::Replace(const N& oldData, const N& newData) {
 }
 
 template <typename N, typename E>
+void Graph<N,E>::MergeReplace(const N& oldData, const N& newData) {
+    if (!IsNode(oldData) || !IsNode(newData)) {
+        throw std::runtime_error("Cannot call Graph::MergeReplace on old or new data if they don't exist in the graph");
+    }
+
+    auto old_node_it = nodes_.find(Node{oldData});
+    auto old_node = *old_node_it;       // this is the node being replaced
+    auto old_node_copy = old_node;
+
+    auto new_node_it = nodes_.find(Node{newData});
+    auto new_node = *new_node_it;   // this is the replacing node
+
+    nodes_.erase(old_node_it); // delete the old node from the graph (along with it's outgoing edges, but incoming edges still exist)
+
+    // iterate through each edge in the old node and replace with edge sourcing from the new node
+    for (Edge e : old_node_copy.edges_) {
+        InsertEdge(new_node, e.first, e.second);        // insert a new edge from the replacing node to the previous dst
+    }
+
+    // now we need to connect all the incoming edges to the replacing node
+    // iterate through each node in the graph and find ones that are outgoing to the old node
+    for (auto n : nodes_) {
+        for (auto e : n.edges_) {        // iterating through each edge in the node
+            if (*(e.first) == oldData) {
+                InsertEdge(n, new_node, *(e.second));   // insert the new edge
+                n.edges_.erase(e);                      // delete the old edge
+            }
+        }
+    }
+
+
+    // need to completely remove the old node
+        // if i delete the old node, how do i access it's existing edges that need to be redirected?
+        // keep a copy of the old node (and hence a copy of all its edges)
+        // iterate through every node and find outgoing edges to the old node. delete/replace those edges (using erase(iterator))
+        // and replace with edges that now go to the new/replacing node
+        // finally, go through the edges of the copied old node and recreate them with the replacing node
+
+    // then connect the previous edges to the new node (create new edges)
+    // then remove any duplicate edges
+
+
+}
+
+template <typename N, typename E>
 bool Graph<N,E>::IsNode(const N &val) {
     return nodes_.find(Node{val}) != nodes_.end();
 }
-
-
-// template <typename N, typename E>    
-// void Graph<N,E>::MergeReplace(const N& oldData, const N& newData) {}
-
 
 template <typename N, typename E>
 void Graph<N,E>::Clear() {
