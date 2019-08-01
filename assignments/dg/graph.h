@@ -54,6 +54,17 @@ class Graph {
           return result.second;
       }
 
+      bool EraseOutgoing(const N& dst, const E &weight) {
+        for (auto it = edges_.cbegin(); it != edges_.cend(); ++it) {
+          if (*(it->first) == dst && *(it->second) == weight) { // found
+            edges_.erase(it);
+            return true;
+          }
+        }
+        // not found
+        return false;
+      }
+
       void CleanOutgoing(const N &src) {
         // std::cout << "CleanOutgoing(" << src << ")" << std::endl;
         auto it = edges_.cbegin();
@@ -68,7 +79,7 @@ class Graph {
         }
       }
 
-      bool HasOutgoing(const N &dst) {
+      bool HasOutgoing(const N &dst) const {
         for (auto it = edges_.cbegin(); it != edges_.cend(); ++it) {
           if (*(it->first) == dst) {
               return true;
@@ -77,26 +88,25 @@ class Graph {
         return false;
       }
 
-      typename std::set<Edge>::const_iterator FindEdge(const N &dst, const E& weight) {
-        auto it = edges_.cbegin();
-        while (it != edges_.cend()) {
+      typename std::set<Edge>::const_iterator FindEdge(const N &dst, const E& weight) const {
+        for (auto it = edges_.cbegin(); it != edges_.cend(); ++it) {
           if (*(it->first) == dst && *(it->second) == weight) {
             return it;
           }
         }
-        return it;
+        return edges_.cend();
       }
 
-      std::set<N> GetOutgoing() {
+      std::set<N> GetOutgoing() const {
         std::set<N> outgoing;
         for (auto it = edges_.cbegin(); it != edges_.cend(); ++it) {
-            outgoing.emplace(*(it->first));
+          outgoing.emplace(*(it->first));
         }
 
         return outgoing;
       }
 
-      std::vector<E> GetDestWeights(const N &dst) {
+      std::vector<E> GetDestWeights(const N &dst) const {
         std::cout << *this;
         std::vector<E> weights;
         for (auto it = edges_.cbegin(); it != edges_.cend(); ++it) {
@@ -144,12 +154,10 @@ class Graph {
       ++edge_it_;
 
       if (edge_it_ == node_it_->edges_.end()) {
-        // ++node_it_;
-        std::advance(node_it_, 1);
+        ++node_it_;
         // only iterating over edges, so if node has no edges, skip
         while(node_it_->edges_.size() == 0) { 
-          // ++node_it_;
-          std::advance(node_it_, 1);
+          ++node_it_;
         }
         edge_it_ = node_it_->edges_.begin();
       }
@@ -217,20 +225,38 @@ class Graph {
   const_reverse_iterator rbegin() { return crbegin(); }
   const_reverse_iterator rend() { return crend(); }
 
-  
+  const_iterator find(const N& a, const N& b, const E& weight) {
+    const auto a_node = nodes_.find(Node{a});
+    const auto b_node = a_node->FindEdge(b, weight);
 
-  // const_iterator find(const N& a, const N& b, const E& weight) {
-  //   auto a_node = nodes_.find(Node{a});
-  //   auto b_node = a_node.edges_.findEdge(b, weight);
+    if (a_node == nodes_.end() || b_node == a_node->edges_.end()) {
+      return cend();
+    }
 
-  //   if (a_node == nodes_.end() || b_node == nodes_.end()) {
-  //     return cend();
-  //   }
+    return const_iterator(a_node, b_node);
+  }
 
-  //   return const_iterator(a_node, b_node);
-  // }
-  // bool erase(const N& src, const N& dst, const E& w);
-  // const_iterator erase(graph_const_iterator it);
+  bool erase(const N& src, const N& dst, const E& w);
+
+  const_iterator erase(const_iterator it) {
+
+    if (it == end()){
+      return it;
+    }
+
+    auto src = std::get<0>(*it);
+    auto dst = std::get<1>(*it);
+    auto w = std::get<2>(*it);
+    auto result = erase(src, dst, w);
+
+    if (!result) {
+      return end();
+    }
+
+    // increment the iterator to return the next element after deleted element
+    ++it;
+    return it;
+  }
   
 
   // default constructor
@@ -339,7 +365,6 @@ class Graph {
 
 private:
     std::set<Node> nodes_;
-    // std::set<Edge> edges_;
 };
 
 
@@ -353,11 +378,16 @@ bool Graph<N, E>::InsertNode(const N &val) {
 
 template <typename N, typename E>
 bool Graph<N,E>::InsertEdge(const N& src, const N& dst, const E& w) {
-    if (!IsNode(src) || !IsNode(dst)) return false; //AND THROW AN ERROR
+    if (!IsNode(src) || !IsNode(dst)) {
+      throw std::runtime_error("Cannot call Graph::InsertEdge when either src or dst node does not exist");
+    }
     auto src_it = nodes_.find(Node{src});
     auto src_node = *(src_it); 
     auto dst_node = *(nodes_.find(Node{dst}));
     auto result = src_node.InsertOutgoing(dst_node.val, w);
+
+    // since we can't modify set elements, we need to delete the previous elem
+    // and then insert the new node with new edge connections
     nodes_.erase(src_it);
     nodes_.insert(src_node);
     return result;
@@ -511,6 +541,27 @@ std::vector<E> Graph<N,E>::GetWeights(const N& src, const N& dst) {
   return src_node.GetDestWeights(dst);
 
 }
+
+template <typename N, typename E>
+bool Graph<N,E>::erase(const N& src, const N& dst, const E& w) {
+  if (!IsNode(src) || !IsNode(dst)) {
+    throw std::runtime_error("Cannot call Graph::InsertEdge when either src or dst node does not exist");
+  }
+
+  auto src_it = nodes_.find(Node{src});
+  auto src_node = *(src_it); 
+  auto dst_node = *(nodes_.find(Node{dst}));
+
+  auto result = src_node.EraseOutgoing(dst, w);
+
+  // since we can't modify set elements, we need to delete the previous elem
+  // and then insert the new node with new edge connections
+  nodes_.erase(src_it);
+  nodes_.insert(src_node);
+
+  return result;
+}
+
 
 }  // namespace gdwg
 
