@@ -188,6 +188,23 @@ SCENARIO("a graph initialised from a vector of tuples in the form <src, dst, wei
 
   }
 
+  WHEN("we use our custom iterator in the reverse direction") {
+    std::cout << "-- TESTING REVERSE CUSTOM ITERATOR --" << std::endl;
+    std::cout << aus;
+    for (auto it = aus.crbegin(); it != aus.rend(); --it){
+      std::cout << "<" << std::get<0>(*it) << ", " << std::get<1>(*it) << ", " << std::get<2>(*it) << ">" << std::endl;
+    }
+
+    std::vector<std::tuple<std::string, std::string, double>> edges(aus.cbegin(), aus.cend());
+    auto t1 = std::make_tuple("adelaide", "brisbane", 2.3);
+    auto t2 = std::make_tuple("melbourne", "perth", 20.1);
+    auto t3 = std::make_tuple("perth", "adelaide", 25.9);
+    auto t4 = std::make_tuple("sydney", "adelaide", 4.7);
+    auto t5 = std::make_tuple("sydney", "melbourne", 5.4);
+    std::vector<std::tuple<std::string, std::string, double>> expected{t5, t4, t3, t2, t1};
+    REQUIRE(edges == expected);
+  }
+
   // WHEN("we use our custom iterator in the reverse direction") {
   //   for (auto rit = aus.rbegin(); rit != aus.rend(); ++rit) {
   //     std::cout << "<" << std::get<0>(*rit) << ", " << std::get<1>(*rit) << ", " << std::get<2>(*rit) << ">" << std::endl;

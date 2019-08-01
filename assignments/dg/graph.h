@@ -167,7 +167,7 @@ class Graph {
         --edge_it_;
       }
       // std::cout << "node_it_ is at " << *(node_it_->val) << std::endl;
-      // std::cout << "edge_it_ is at " << *(edge_it_->first) << std::endl;
+      // std::cout << "edge_it_ is at " << *22(edge_it_->first) << std::endl;
       return {*(node_it_->val), *(edge_it_->first), *(edge_it_->second)};
     };
     const_iterator operator--(int) { auto cpy {*this}; operator--(); return cpy; };
@@ -194,12 +194,15 @@ class Graph {
   }
   const_iterator cend() {
     // std::cout << (--(nodes_.end()))->edges_.size() << std::endl;
-    return const_iterator{nodes_.end(), (nodes_.end())->edges_.begin()};
+    return const_iterator{nodes_.end(), (nodes_.end())->edges_.begin()}; // you cant start at .end(), thats null
+                                                                            // solution: have a prev pointer? like node* tail.
+                                                                            // or set the end to be a dummy node
+                                                                            // then have cend return the tail iterator of dummy
   }
   const_iterator begin() { return cbegin(); }
   const_iterator end() { return cend(); }
   const_reverse_iterator crbegin() { return const_reverse_iterator{cend()}; }
-  const_reverse_iterator crend() { return const_reverse_iterator{cbegin()};  }
+  const_reverse_iterator crend() { return const_reverse_iterator{cbegin()}; }
   const_reverse_iterator rbegin() { return crbegin(); }
   const_reverse_iterator rend() { return crend(); }
 
@@ -326,7 +329,7 @@ class Graph {
 private:
     std::set<Node> nodes_;
     // std::set<Edge> edges_;
-}w;
+};
 
 
 
