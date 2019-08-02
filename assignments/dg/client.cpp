@@ -21,10 +21,18 @@ int main() {
 
   g.InsertEdge("are", "you?", 3);
 
-  /*
-
-  std::cout << g << '\n';
-
+  gdwg::Graph<int, double> g1;
+  g1.InsertNode(1);
+  g1.InsertNode(2);
+  g1.InsertNode(3);
+  g1.InsertEdge(1, 2, 6.9);
+  g1.InsertEdge(1, 2, 4.2);
+  g1.InsertEdge(2, 3, 1.1);
+  g1.InsertEdge(3, 2, 1.2);
+  g1.InsertEdge(3, 2, 1.4);
+  std::cout << g1;
+  //std::cout << g << '\n';
+/*
   gdwg::Graph<std::string, int> g2{g};
 
   std::cout << g2 << "\n";

@@ -65,6 +65,15 @@ class Graph {
         return false;
       }
 
+      /*void ReplaceOutgoing(const Node &new_dst, const Node &old_dst) {
+        for (Edge e : edges_) {
+          if (*(e.first) == old_dst) {
+            InsertOutgoing(new_dst.val, *(e.second));   // insert the new edge
+            edges_.erase(e);                      // delete the old edge
+          }
+        }
+      }*/
+
       void CleanOutgoing(const N &src) {
         // std::cout << "CleanOutgoing(" << src << ")" << std::endl;
         auto it = edges_.cbegin();
@@ -274,7 +283,7 @@ class Graph {
   }
 
   // COPY CONSTRUCTOR
- /* Graph(const Graph<N, E> &g) {
+  Graph(const Graph<N, E> &g) {
     // each node needs its own N on the heap now...
     // must do this first before you add the edges
 
@@ -285,7 +294,7 @@ class Graph {
       InsertNode(std::get<1>(*it));
       InsertEdge(std::get<0>(*it), std::get<1>(*it), std::get<2>(*it));
     } 
-  }*/
+  }
 
   ~Graph() = default;
   //    METHODS
@@ -308,7 +317,7 @@ class Graph {
 
     friend bool operator==(const gdwg::Graph<N, E>& g1, const gdwg::Graph<N, E>& g2) {
         // check both graphs have same nodes and edges
-        for (auto n : g1.nodes_) {
+        for (const auto n : g1.nodes_) {
             // checking nodes
             if (g2.nodes_.find(n) != g2.nodes_.end()) {
                 auto n2_iterator = g2.nodes_.find(n);
@@ -317,13 +326,15 @@ class Graph {
                 for (auto e : n.edges_) {
                     // if the corresponding node in the second graph has the same edge, continue checking
                     // if it doesn't the graphs are not equal so return false
-                    auto weight = e.second;
+                    auto weight = *(e.second);
                     // iterate through the corresponding node in the second graph to find the same edge
                     unsigned long count = 0;
                     for (auto e2 : n2.edges_) {
-                        if (e2.second == weight) break;
+                        if (*(e2.second) == weight) break;
                         count++;
-                        if (count == n2.edges_.size()) return false; // if we reach the end of n2 then the edge doesnt exist
+                        if (count == n2.edges_.size()) {
+                          return false; // if we reach the end of n2 then the edge doesnt exist
+                        }
                     }
                 }
             }
@@ -342,8 +353,8 @@ class Graph {
     }
 
     friend std::ostream& operator<<(std::ostream &os, const Graph<N, E> &graph) {
-        std::cout << "--- PRINTING OUT GRAPH --- " << std::endl;
-        std::cout << "nodes in graph: " << graph.nodes_.size() << std::endl;
+        //std::cout << "--- PRINTING OUT GRAPH --- " << std::endl;
+        //std::cout << "nodes in graph: " << graph.nodes_.size() << std::endl;
         for (auto it = graph.nodes_.cbegin(); it != graph.nodes_.cend(); ++it) {
             os << *(it);
         }
@@ -434,21 +445,19 @@ void Graph<N,E>::MergeReplace(const N& oldData, const N& newData) {
 
     auto old_node_it = nodes_.find(Node{oldData});
     auto old_node = *old_node_it;       // this is the node being replaced
-    auto old_node_copy = old_node;
 
     auto new_node_it = nodes_.find(Node{newData});
     auto new_node = *new_node_it;   // this is the replacing node
 
     // iterate through each edge in the old node and replace with edge sourcing from the new node
-    for (Edge e : old_node_copy.edges_) {
+    for (Edge e : old_node.edges_) {
         InsertEdge(*(new_node.val), *(e.first), *(e.second));        // insert a new edge from the replacing node to the previous dst
     }
-
-    nodes_.erase(old_node_it); // delete the old node from the graph (along with it's outgoing edges, but incoming edges still exist)
 
     // now we need to connect all the incoming edges to the replacing node
     // iterate through each node in the graph and find ones that are outgoing to the old node
     for (auto n : nodes_) {
+      //n.ReplaceOutgoing(new_node, old_node);
         for (auto e : n.edges_) {        // iterating through each edge in the node
             if (*(e.first) == oldData) {
                 InsertEdge(*(n.val), *(new_node.val), *(e.second));   // insert the new edge
@@ -456,8 +465,9 @@ void Graph<N,E>::MergeReplace(const N& oldData, const N& newData) {
             }
         }
     }
+  nodes_.erase(old_node_it); // delete the old node from the graph (along with it's outgoing edges, but incoming edges still exist)
 
-    return;
+  return;
 
     // need to completely remove the old node
         // if i delete the old node, how do i access it's existing edges that need to be redirected?
