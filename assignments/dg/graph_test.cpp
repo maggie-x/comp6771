@@ -3,7 +3,7 @@
   == Explanation and rational of testing ==
   The scope of our tests are mainly concerned with ensuring the correctness of each function
   (constructor, overload, method) that we implemented. To do so we created brief tests for each
-  function (since each part of the program I implemented is relatively simple, if it works for a
+  function (since each part of the program we implemented is relatively simple, if it works for a
   simple case, it should work for more complicated cases too).
 
   First, we will test all the constructors and ensure that they work. From there, we just test each method/operator on
@@ -228,13 +228,15 @@ SCENARIO("Testing the MergeReplace method") {
         std::string brisbane{"brisbane"};
 
         auto syd_melb = std::make_tuple(sydney, melbourne, 5.4);
+        auto mel_mel = std::make_tuple(melbourne, melbourne, 5.4);
         auto per_syd = std::make_tuple(perth, sydney, 6.9);
+        auto per_mel = std::make_tuple(perth, melbourne, 6.9);
         auto melb_per = std::make_tuple(melbourne, perth, 20.1);
         auto per_ade = std::make_tuple(perth, adelaide, 25.9);
         auto syd_ade = std::make_tuple(sydney, adelaide, 4.7);
         auto ade_bris = std::make_tuple(adelaide, brisbane, 2.3);
 
-        auto e = std::vector<std::tuple<std::string, std::string, double>>{syd_melb, melb_per, per_ade, syd_ade, ade_bris, per_syd};
+        auto e = std::vector<std::tuple<std::string, std::string, double>>{syd_melb, melb_per, per_ade, syd_ade, ade_bris, per_syd, mel_mel, per_mel};
         gdwg::Graph<std::string, double> aus{e.begin(), e.end()};
         WHEN("We try to replace and merge the old node with an already existing value using the MergeReplace method") {
             aus.MergeReplace(sydney, melbourne);
@@ -255,7 +257,8 @@ SCENARIO("Testing the MergeReplace method") {
                 REQUIRE(mel_mel_weights[0] == 5.4);
                 REQUIRE(mel_ade_weights[0] == 4.7);
                 REQUIRE(per_mel_weights[0] == 6.9);
-
+                REQUIRE(mel_mel_weights.size() == 1); // there should still be only one edge from melbourne to melbourne since the duplicate should be removed
+                REQUIRE(per_mel_weights.size() == 1);
             }
         }
     }
@@ -476,7 +479,7 @@ SCENARIO("a graph initialised from a vector of tuples in the form <src, dst, wei
     REQUIRE(aus.find("perth", "adelaides", 25.9) == aus.end());
   }
 
-  /*WHEN("we erase via an iterator on the graph") {
+  WHEN("we erase via an iterator on the graph") {
     // std::cout << aus;
     auto it = aus.find("perth", "adelaide", 25.9);
     auto new_it = aus.erase(it);
@@ -491,7 +494,7 @@ SCENARIO("a graph initialised from a vector of tuples in the form <src, dst, wei
       REQUIRE(aus.erase(aus.end()) == aus.end());
     }
 
-  }*/
+  }
 
   }
     WHEN("We try to use the MergeReplace function on it") {

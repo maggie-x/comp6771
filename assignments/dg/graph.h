@@ -433,6 +433,8 @@ bool Graph<N,E>::Replace(const N& oldData, const N& newData) {
 
 template <typename N, typename E>
 void Graph<N,E>::MergeReplace(const N& oldData, const N& newData) {
+    if (oldData == newData) return; // do nothing if old and new are the same
+
     if (!IsNode(oldData) || !IsNode(newData)) {
         throw std::runtime_error("Cannot call Graph::MergeReplace on old or new data if they don't exist in the graph");
     }
@@ -462,6 +464,7 @@ void Graph<N,E>::MergeReplace(const N& oldData, const N& newData) {
         }
     }
 
+    return;
 
     // need to completely remove the old node
         // if i delete the old node, how do i access it's existing edges that need to be redirected?
@@ -472,7 +475,6 @@ void Graph<N,E>::MergeReplace(const N& oldData, const N& newData) {
 
     // then connect the previous edges to the new node (create new edges)
     // then remove any duplicate edges
-
 
 }
 
