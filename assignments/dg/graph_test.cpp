@@ -430,13 +430,10 @@ SCENARIO("a graph initialised from a vector of tuples in the form <src, dst, wei
   }
 
   WHEN("we use our custom iterator in the reverse direction") {
-      std::cout << "testing reverse iterator" << std::endl;
-    for (auto rit = aus.rbegin(); rit != aus.rend(); ++rit) {
-      std::cout << "<" << std::get<0>(*(rit)) << ", " << std::get<1>(*rit) << ", " << std::get<2>(*rit) << ">" << std::endl;
+
     // std::cout << "-- TESTING REVERSE ITERATOR --" << std::endl;
     // for (auto rit = aus.rbegin(); rit != aus.rend(); ++rit) {
     //   std::cout << "<" << std::get<0>(*(rit)) << ", " << std::get<1>(*rit) << ", " << std::get<2>(*rit) << ">" << std::endl;
-
     // }
 
     std::vector<std::tuple<std::string, std::string, double>> reverse_edges(aus.crbegin(), aus.crend());
@@ -449,34 +446,35 @@ SCENARIO("a graph initialised from a vector of tuples in the form <src, dst, wei
     REQUIRE(reverse_edges == expected);
 
   }
+  
 
-    WHEN("We use find to get an iterator to a particular edge in our graph") {
-        auto it = aus.find("perth", "adelaide", 25.9);
+  WHEN("We use find to get an iterator to a particular edge in our graph") {
+      auto it = aus.find("perth", "adelaide", 25.9);
 
-        auto t2 = std::make_tuple("melbourne", "perth", 20.1);
-        auto t3 = std::make_tuple("perth", "adelaide", 25.9);
-        auto t4 = std::make_tuple("sydney", "adelaide", 4.7);
+      auto t2 = std::make_tuple("melbourne", "perth", 20.1);
+      auto t3 = std::make_tuple("perth", "adelaide", 25.9);
+      auto t4 = std::make_tuple("sydney", "adelaide", 4.7);
 
-        REQUIRE(*it == t3);
+      REQUIRE(*it == t3);
 
-        WHEN("incremented forward") {
-            std::advance(it, 1);
-            REQUIRE(*it == t4);
-        }
+      WHEN("incremented forward") {
+          std::advance(it, 1);
+          REQUIRE(*it == t4);
+      }
 
-        WHEN("decremented backward") {
-            std::advance(it, -1);
-            REQUIRE(*it == t2);
-        }
+      WHEN("decremented backward") {
+          std::advance(it, -1);
+          REQUIRE(*it == t2);
+      }
 
-    }
+  }
 
   WHEN("we use find to get an edge that doesn't exist") {
     // adelaide is now plural, so shouldn't show up
     REQUIRE(aus.find("perth", "adelaides", 25.9) == aus.end());
   }
 
-  /*WHEN("we erase via an iterator on the graph") {
+  WHEN("we erase via an iterator on the graph") {
     // std::cout << aus;
     auto it = aus.find("perth", "adelaide", 25.9);
     auto new_it = aus.erase(it);
@@ -491,16 +489,16 @@ SCENARIO("a graph initialised from a vector of tuples in the form <src, dst, wei
       REQUIRE(aus.erase(aus.end()) == aus.end());
     }
 
-  }*/
-
   }
-    WHEN("We try to use the MergeReplace function on it") {
-        aus.MergeReplace(sydney, melbourne);
-        THEN("We should get a graph where sydney edges are replaced by melbourne edges") {
-             REQUIRE(aus.IsConnected("melbourne", "adelaide"));
-             REQUIRE(aus.IsConnected("melbourne", "melbourne"));
-             REQUIRE(aus.IsConnected("melbourne", "perth"));
-             REQUIRE(!(aus.IsNode("sydney")));
-        }
-    }
+
+  WHEN("We try to use the MergeReplace function on it") {
+      aus.MergeReplace(sydney, melbourne);
+      THEN("We should get a graph where sydney edges are replaced by melbourne edges") {
+            REQUIRE(aus.IsConnected("melbourne", "adelaide"));
+            REQUIRE(aus.IsConnected("melbourne", "melbourne"));
+            REQUIRE(aus.IsConnected("melbourne", "perth"));
+            REQUIRE(!(aus.IsNode("sydney")));
+      }
+  }
+
 }

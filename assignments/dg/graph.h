@@ -162,9 +162,6 @@ class Graph {
         edge_it_ = node_it_->edges_.begin();
       }
 
-        // std::cout << "node_it_ is at " << *(node_it_->val) << std::endl;
-        // std::cout << "edge_it_ is at " << *(edge_it_->first) << std::endl;
-
       return *this;
     }; // pre is the first one
       const_iterator operator++(int) { auto cpy {*this}; operator++(); return cpy; }; // post is the second
@@ -180,8 +177,6 @@ class Graph {
               edge_it_ = node_it_->edges_.end(); // == end
           }
           --edge_it_;
-          // std::cout << "node_it_ is at " << *(node_it_->val) << std::endl;
-          // std::cout << "edge_it_ is at " << *(edge_it_->first) << std::endl;
           return *this;
       };
     const_iterator operator--(int) { auto cpy {*this}; operator--(); return cpy; };
@@ -277,19 +272,19 @@ class Graph {
     }
   }
 
-  // // COPY CONSTRUCTOR
+  // COPY CONSTRUCTOR
   // Graph(const Graph<N, E> &g) {
   //   // each node needs its own N on the heap now...
   //   // must do this first before you add the edges
 
   //   // implement graph iterator !! 
 
-  //   for (auto it_n = g.nodes_.begin(); it_n != g.nodes_.end(); ++it_n) {
-  //     InsertNode(it_n->val);
-  //   }
-
-    
-  
+  //   for (auto it = g.begin(); it != g.end(); ++it) {
+  //     InsertNode(std::get<0>(*it));
+  //     InsertNode(std::get<1>(*it));
+  //     InsertEdge(std::get<2>(*it));
+  //   } 
+  // }
 
   ~Graph() = default;
   //    METHODS
