@@ -162,9 +162,6 @@ class Graph {
         edge_it_ = node_it_->edges_.begin();
       }
 
-        // std::cout << "node_it_ is at " << *(node_it_->val) << std::endl;
-        // std::cout << "edge_it_ is at " << *(edge_it_->first) << std::endl;
-
       return *this;
     }; // pre is the first one
       const_iterator operator++(int) { auto cpy {*this}; operator++(); return cpy; }; // post is the second
@@ -180,8 +177,6 @@ class Graph {
               edge_it_ = node_it_->edges_.end(); // == end
           }
           --edge_it_;
-          // std::cout << "node_it_ is at " << *(node_it_->val) << std::endl;
-          // std::cout << "edge_it_ is at " << *(edge_it_->first) << std::endl;
           return *this;
       };
     const_iterator operator--(int) { auto cpy {*this}; operator--(); return cpy; };
@@ -202,23 +197,23 @@ class Graph {
   // using const_iterator = const_iterator;
   using const_reverse_iterator = std::reverse_iterator<const_iterator>;
   
-  const_iterator cbegin() {
+  const_iterator cbegin() const {
     // std::cout << nodes_.size() << std::endl;
     return const_iterator{nodes_.begin(), (nodes_.begin())->edges_.begin()};
   }
-  const_iterator cend() {
+  const_iterator cend() const {
     // std::cout << (--(nodes_.end()))->edges_.size() << std::endl;
     return const_iterator{nodes_.end(), (nodes_.end())->edges_.begin()}; // you cant start at .end(), thats null
                                                                             // solution: have a prev pointer? like node* tail.
                                                                             // or set the end to be a dummy node
                                                                             // then have cend return the tail iterator of dummy
   }
-  const_iterator begin() { return cbegin(); }
-  const_iterator end() { return cend(); }
-  const_reverse_iterator crbegin() { return const_reverse_iterator{cend()}; }
-  const_reverse_iterator crend() { return const_reverse_iterator{cbegin()}; }
-  const_reverse_iterator rbegin() { return crbegin(); }
-  const_reverse_iterator rend() { return crend(); }
+  const_iterator begin() const { return cbegin(); }
+  const_iterator end() const { return cend(); }
+  const_reverse_iterator crbegin() const { return const_reverse_iterator{cend()}; }
+  const_reverse_iterator crend() const { return const_reverse_iterator{cbegin()}; }
+  const_reverse_iterator rbegin() const { return crbegin(); }
+  const_reverse_iterator rend() const { return crend(); }
 
   const_iterator find(const N& a, const N& b, const E& weight) {
     const auto a_node = nodes_.find(Node{a});
@@ -277,19 +272,19 @@ class Graph {
     }
   }
 
-  // // COPY CONSTRUCTOR
-  // Graph(const Graph<N, E> &g) {
-  //   // each node needs its own N on the heap now...
-  //   // must do this first before you add the edges
+  // COPY CONSTRUCTOR
+  Graph(const Graph<N, E> &g) {
+    // each node needs its own N on the heap now...
+    // must do this first before you add the edges
 
-  //   // implement graph iterator !! 
+    // implement graph iterator !! 
 
-  //   for (auto it_n = g.nodes_.begin(); it_n != g.nodes_.end(); ++it_n) {
-  //     InsertNode(it_n->val);
-  //   }
-
-    
-  
+    for (auto it = g.begin(); it != g.end(); ++it) {
+      InsertNode(std::get<0>(*it));
+      InsertNode(std::get<1>(*it));
+      InsertEdge(std::get<0>(*it), std::get<1>(*it), std::get<2>(*it));
+    } 
+  }
 
   ~Graph() = default;
   //    METHODS

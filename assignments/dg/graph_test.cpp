@@ -29,8 +29,10 @@ DONE:
 - do we need a pointer type for our iterator?
 
 TODO:
+[ ] more efficient method for bool operator==?
 [ ] more thorough tests
 - using non-primitive types
+- self-connected edges
 
 [ ] check correct errors are being thrown & return types are correct
 [ ] const correctness
@@ -118,6 +120,24 @@ SCENARIO("Constructing a graph using the initializer list constructor))") {
     }
 }
 
+SCENARIO("Construct a new graph from an existing graph with the copy constructor") {
+  std::string sydney{"sydney"};
+  std::string melbourne{"melbourne"};
+  std::string perth{"perth"};
+
+  auto syd_melb = std::make_tuple(sydney, melbourne, 5.4);
+  auto melb_per = std::make_tuple(melbourne, perth, 20.1);
+
+  auto e = std::vector<std::tuple<std::string, std::string, double>>{syd_melb, melb_per};
+  const gdwg::Graph<std::string, double> aus{e.begin(), e.end()};
+
+  THEN("when we construct a new graph from this graph") {
+    gdwg::Graph<std::string, double> aus2{aus};
+
+    REQUIRE(aus == aus2);
+  }
+}
+
 SCENARIO("Testing the InsertNode method") {
     GIVEN("An empty graph of int nodes and double edges") {
         gdwg::Graph<int, double> g;
@@ -149,6 +169,8 @@ SCENARIO("Testing the InsertEdge method") {
                 REQUIRE(edges[0] == 2.5);
             }
         }
+
+        // TODO CHECK A NODE CONNECTING TO ITSELF
     }
 }
 
@@ -295,6 +317,22 @@ SCENARIO("a initialiser list constructed graph") {
   std::vector<std::string> colours{"blue", "green", "indigo", "orange", "red", "violet", "yellow" };
   REQUIRE(isEqual(graph.GetNodes(), colours));
 
+  // TESTING FOR CORRECT ORDERING OF EDGES IN NODE
+  WHEN("multiple nodes are added as outgoing nodes to one node") {
+    graph.InsertEdge("violet", "red", 0.8);
+    graph.InsertEdge("violet", "orange", 0.7);
+    graph.InsertEdge("violet", "yellow", 0.6);
+    graph.InsertEdge("violet", "green", 0.5);
+    graph.InsertEdge("violet", "blue", 0.4);
+    graph.InsertEdge("violet", "indigo", 0.3);
+    graph.InsertEdge("violet", "violet", 0.2);
+
+    THEN("the edges should be ordered by their destination node") {
+      std::vector<std::string> expected{"blue", "green", "indigo", "orange", "red", "violet", "yellow"};
+      REQUIRE(expected == graph.GetConnected("violet"));
+    }
+  }
+
   WHEN("multiple edges are added between two nodes") {
     graph.InsertEdge("violet", "yellow", 0.8);
     graph.InsertEdge("violet", "yellow", 0.7);
@@ -307,8 +345,15 @@ SCENARIO("a initialiser list constructed graph") {
 
     // TODO: ENFORCE CHECK THAT THE EDGES ARE IN ORDER 
     // std::cout << graph;
+
+    THEN("the edges should be ordered by their weight to the destination node") {
+      std::vector<double> expected{0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8};
+      REQUIRE(expected == graph.GetWeights("violet", "yellow"));
+    }
   }
 }
+
+
 
 SCENARIO("A graph initialised with values from a vector (provided by a start and end iterator)") {
   std::string p1 = "hello"; // std::make_pair(1, 'a');
@@ -433,13 +478,10 @@ SCENARIO("a graph initialised from a vector of tuples in the form <src, dst, wei
   }
 
   WHEN("we use our custom iterator in the reverse direction") {
-      std::cout << "testing reverse iterator" << std::endl;
-    for (auto rit = aus.rbegin(); rit != aus.rend(); ++rit) {
-      std::cout << "<" << std::get<0>(*(rit)) << ", " << std::get<1>(*rit) << ", " << std::get<2>(*rit) << ">" << std::endl;
+
     // std::cout << "-- TESTING REVERSE ITERATOR --" << std::endl;
     // for (auto rit = aus.rbegin(); rit != aus.rend(); ++rit) {
     //   std::cout << "<" << std::get<0>(*(rit)) << ", " << std::get<1>(*rit) << ", " << std::get<2>(*rit) << ">" << std::endl;
-
     // }
 
     std::vector<std::tuple<std::string, std::string, double>> reverse_edges(aus.crbegin(), aus.crend());
@@ -452,27 +494,28 @@ SCENARIO("a graph initialised from a vector of tuples in the form <src, dst, wei
     REQUIRE(reverse_edges == expected);
 
   }
+  
 
-    WHEN("We use find to get an iterator to a particular edge in our graph") {
-        auto it = aus.find("perth", "adelaide", 25.9);
+  WHEN("We use find to get an iterator to a particular edge in our graph") {
+      auto it = aus.find("perth", "adelaide", 25.9);
 
-        auto t2 = std::make_tuple("melbourne", "perth", 20.1);
-        auto t3 = std::make_tuple("perth", "adelaide", 25.9);
-        auto t4 = std::make_tuple("sydney", "adelaide", 4.7);
+      auto t2 = std::make_tuple("melbourne", "perth", 20.1);
+      auto t3 = std::make_tuple("perth", "adelaide", 25.9);
+      auto t4 = std::make_tuple("sydney", "adelaide", 4.7);
 
-        REQUIRE(*it == t3);
+      REQUIRE(*it == t3);
 
-        WHEN("incremented forward") {
-            std::advance(it, 1);
-            REQUIRE(*it == t4);
-        }
+      WHEN("incremented forward") {
+          std::advance(it, 1);
+          REQUIRE(*it == t4);
+      }
 
-        WHEN("decremented backward") {
-            std::advance(it, -1);
-            REQUIRE(*it == t2);
-        }
+      WHEN("decremented backward") {
+          std::advance(it, -1);
+          REQUIRE(*it == t2);
+      }
 
-    }
+  }
 
   WHEN("we use find to get an edge that doesn't exist") {
     // adelaide is now plural, so shouldn't show up
@@ -496,14 +539,14 @@ SCENARIO("a graph initialised from a vector of tuples in the form <src, dst, wei
 
   }
 
+  WHEN("We try to use the MergeReplace function on it") {
+      aus.MergeReplace(sydney, melbourne);
+      THEN("We should get a graph where sydney edges are replaced by melbourne edges") {
+            REQUIRE(aus.IsConnected("melbourne", "adelaide"));
+            REQUIRE(aus.IsConnected("melbourne", "melbourne"));
+            REQUIRE(aus.IsConnected("melbourne", "perth"));
+            REQUIRE(!(aus.IsNode("sydney")));
+      }
   }
-    WHEN("We try to use the MergeReplace function on it") {
-        aus.MergeReplace(sydney, melbourne);
-        THEN("We should get a graph where sydney edges are replaced by melbourne edges") {
-             REQUIRE(aus.IsConnected("melbourne", "adelaide"));
-             REQUIRE(aus.IsConnected("melbourne", "melbourne"));
-             REQUIRE(aus.IsConnected("melbourne", "perth"));
-             REQUIRE(!(aus.IsNode("sydney")));
-        }
-    }
+
 }
