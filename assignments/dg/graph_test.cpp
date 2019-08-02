@@ -281,7 +281,7 @@ SCENARIO("Testing the MergeReplace method") {
                 REQUIRE(mel_mel_weights[1] == 5.4);
                 REQUIRE(mel_ade_weights[0] == 4.7);
                 REQUIRE(per_mel_weights[0] == 6.9);
-                REQUIRE(mel_mel_weights.size() == 2); // there should still be only one edge from melbourne to melbourne since the duplicate should be removed
+                REQUIRE(mel_mel_weights.size() == 2); // there should be 2 edges from mel to mel because the syd->syd one should be transferred over, and the duplicate should be removed
                 REQUIRE(per_mel_weights.size() == 1);
             }
         }
