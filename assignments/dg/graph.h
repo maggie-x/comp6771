@@ -273,7 +273,7 @@ class Graph {
   }
 
   // COPY CONSTRUCTOR
-  Graph(const Graph<N, E> &g) {
+ /* Graph(const Graph<N, E> &g) {
     // each node needs its own N on the heap now...
     // must do this first before you add the edges
 
@@ -284,7 +284,7 @@ class Graph {
       InsertNode(std::get<1>(*it));
       InsertEdge(std::get<0>(*it), std::get<1>(*it), std::get<2>(*it));
     } 
-  }
+  }*/
 
   ~Graph() = default;
   //    METHODS
@@ -438,12 +438,12 @@ void Graph<N,E>::MergeReplace(const N& oldData, const N& newData) {
     auto new_node_it = nodes_.find(Node{newData});
     auto new_node = *new_node_it;   // this is the replacing node
 
-    nodes_.erase(old_node_it); // delete the old node from the graph (along with it's outgoing edges, but incoming edges still exist)
-
     // iterate through each edge in the old node and replace with edge sourcing from the new node
     for (Edge e : old_node_copy.edges_) {
         InsertEdge(*(new_node.val), *(e.first), *(e.second));        // insert a new edge from the replacing node to the previous dst
     }
+
+    nodes_.erase(old_node_it); // delete the old node from the graph (along with it's outgoing edges, but incoming edges still exist)
 
     // now we need to connect all the incoming edges to the replacing node
     // iterate through each node in the graph and find ones that are outgoing to the old node
