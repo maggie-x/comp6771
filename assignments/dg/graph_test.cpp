@@ -31,6 +31,7 @@ DONE:
 TODO:
 [ ] more thorough tests
 - using non-primitive types
+- self-connected edges
 
 [ ] check correct errors are being thrown & return types are correct
 [ ] const correctness
@@ -149,6 +150,8 @@ SCENARIO("Testing the InsertEdge method") {
                 REQUIRE(edges[0] == 2.5);
             }
         }
+
+        // TODO CHECK A NODE CONNECTING TO ITSELF
     }
 }
 
@@ -292,6 +295,22 @@ SCENARIO("a initialiser list constructed graph") {
   std::vector<std::string> colours{"blue", "green", "indigo", "orange", "red", "violet", "yellow" };
   REQUIRE(isEqual(graph.GetNodes(), colours));
 
+  // TESTING FOR CORRECT ORDERING OF EDGES IN NODE
+  WHEN("multiple nodes are added as outgoing nodes to one node") {
+    graph.InsertEdge("violet", "red", 0.8);
+    graph.InsertEdge("violet", "orange", 0.7);
+    graph.InsertEdge("violet", "yellow", 0.6);
+    graph.InsertEdge("violet", "green", 0.5);
+    graph.InsertEdge("violet", "blue", 0.4);
+    graph.InsertEdge("violet", "indigo", 0.3);
+    graph.InsertEdge("violet", "violet", 0.2);
+
+    THEN("the edges should be ordered by their destination node") {
+      std::vector<std::string> expected{"blue", "green", "indigo", "orange", "red", "violet", "yellow"};
+      REQUIRE(expected == graph.GetConnected("violet"));
+    }
+  }
+
   WHEN("multiple edges are added between two nodes") {
     graph.InsertEdge("violet", "yellow", 0.8);
     graph.InsertEdge("violet", "yellow", 0.7);
@@ -304,8 +323,15 @@ SCENARIO("a initialiser list constructed graph") {
 
     // TODO: ENFORCE CHECK THAT THE EDGES ARE IN ORDER 
     // std::cout << graph;
+
+    THEN("the edges should be ordered by their weight to the destination node") {
+      std::vector<double> expected{0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8};
+      REQUIRE(expected == graph.GetWeights("violet", "yellow"));
+    }
   }
 }
+
+
 
 SCENARIO("A graph initialised with values from a vector (provided by a start and end iterator)") {
   std::string p1 = "hello"; // std::make_pair(1, 'a');
