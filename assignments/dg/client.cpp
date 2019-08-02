@@ -19,7 +19,9 @@ int main() {
   g.InsertEdge("how", "you?", 1);
   g.InsertEdge("how", "hello", 4);
 
-  g.InsertEdge("are", "you?", 3);/*
+  g.InsertEdge("are", "you?", 3);
+
+  /*
 
   std::cout << g << '\n';
 
