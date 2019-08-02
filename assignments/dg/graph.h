@@ -237,14 +237,15 @@ class Graph {
     auto src = std::get<0>(*it);
     auto dst = std::get<1>(*it);
     auto w = std::get<2>(*it);
+    // increment the iterator to return the next element after deleted element
+    ++it;
     auto result = erase(src, dst, w);
 
     if (!result) {
       return end();
     }
 
-    // increment the iterator to return the next element after deleted element
-    ++it;
+    
     return it;
   }
   
