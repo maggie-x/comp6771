@@ -38,13 +38,14 @@ TODO:
 - using non-primitive types
 - self-connected edges
 
-[ ] check correct errors are being thrown & return types are correct
+[x] check correct errors are being thrown & return types are correct
 [ ] const correctness
 [ ] clean up some code
 [ ] edge cases
-[ ] exception throwing tests
+[x] exception throwing tests
 [ ] tests checking for duplicate handling (construction, methods)
-[ ] test checking for correct order of nodes/edges
+[x] test checking for correct order of nodes/edges
+[ ] test copy/move assignment/constructorsj
 
 
 
@@ -126,22 +127,165 @@ SCENARIO("Constructing a graph using the initializer list constructor))") {
     }
 }
 
-/*SCENARIO("Construct a new graph from an existing graph with the copy constructor") {
-  std::string sydney{"sydney"};
-  std::string melbourne{"melbourne"};
-  std::string perth{"perth"};
+/*
+SCENARIO("Construct a new graph from an existing graph with the copy constructor") {
+  GIVEN("A graph of int nodes and double edges containing two nodes and some edges") {
+    gdwg::Graph<int, double> g;
+    g.InsertNode(1);
+    g.InsertNode(2);
+    g.InsertEdge(1, 2, 6.9);
+    g.InsertEdge(1, 2, 4.20);
+    g.InsertEdge(1, 2, 5.2);
+    WHEN("We try to construct a second graph using the copy constructor and the first graph") {
+      gdwg::Graph<int, double> g2{g};
+      THEN("The resulting graph and original graph should contain the same values") {
+        std::vector<int> nodes1 = g.GetNodes();
+        REQUIRE(nodes1.size() == 2);
+        REQUIRE(nodes1[0] == 1);
+        REQUIRE(nodes1[1] == 2);
 
-  auto syd_melb = std::make_tuple(sydney, melbourne, 5.4);
-  auto melb_per = std::make_tuple(melbourne, perth, 20.1);
+        std::vector<double> edges1 = g.GetWeights(1, 2);
+        REQUIRE(edges1.size() == 3);
+        REQUIRE(edges1[0] == 4.2);
+        REQUIRE(edges1[1] == 5.2);
+        REQUIRE(edges1[2] == 6.9);
 
-  auto e = std::vector<std::tuple<std::string, std::string, double>>{syd_melb, melb_per};
-  const gdwg::Graph<std::string, double> aus{e.begin(), e.end()};
+        std::vector<int> nodes2 = g2.GetNodes();
+        REQUIRE(nodes2.size() == 2);
+        REQUIRE(nodes2[0] == 1);
+        REQUIRE(nodes2[1] == 2);
 
-  THEN("when we construct a new graph from this graph") {
-    gdwg::Graph<std::string, double> aus2{aus};
-    REQUIRE(aus == aus2);
+        std::vector<double> edges2 = g2.GetWeights(1, 2);
+        REQUIRE(edges2.size() == 3);
+        REQUIRE(edges2[0] == 4.2);
+        REQUIRE(edges2[1] == 5.2);
+        REQUIRE(edges2[2] == 6.9);
+      }
+    }
   }
-}*/
+}
+*/
+
+SCENARIO("Construct a new graph from an existing graph with the move constructor") {
+  GIVEN("A graph of int nodes and double edges containing two nodes and some edges") {
+    gdwg::Graph<int, double> g;
+    g.InsertNode(1);
+    g.InsertNode(2);
+    g.InsertEdge(1, 2, 6.9);
+    g.InsertEdge(1, 2, 4.20);
+    g.InsertEdge(1, 2, 5.2);
+    WHEN("We try to construct a second graph using the move constructor and the first graph") {
+      gdwg::Graph<int, double> g2{std::move(g)};
+      THEN("The resulting graph should contain the original graphs values, and the original graph should be empty") {
+        std::vector<int> nodes1 = g.GetNodes();
+        REQUIRE(nodes1.size() == 0);
+
+        std::vector<int> nodes2 = g2.GetNodes();
+        REQUIRE(nodes2.size() == 2);
+        REQUIRE(nodes2[0] == 1);
+        REQUIRE(nodes2[1] == 2);
+
+        std::vector<double> edges2 = g2.GetWeights(1, 2);
+        REQUIRE(edges2.size() == 3);
+        REQUIRE(edges2[0] == 4.2);
+        REQUIRE(edges2[1] == 5.2);
+        REQUIRE(edges2[2] == 6.9);
+      }
+    }
+  }
+}
+
+
+/*
+SCENARIO("Testing the copy assignment") {
+  GIVEN("A graph of int nodes and double edges containing two nodes and some edges") {
+    gdwg::Graph<int, double> g;
+    g.InsertNode(1);
+    g.InsertNode(2);
+    g.InsertEdge(1, 2, 6.9);
+    g.InsertEdge(1, 2, 4.20);
+    g.InsertEdge(1, 2, 5.2);
+    WHEN("We try to copy the original graph to a new graph using the copy assignment") {
+      gdwg::Graph<int, double> copy = g;
+      THEN("The original and copy should contain the same values") {
+        std::vector<int> nodes1 = g.GetNodes();
+        REQUIRE(nodes1.size() == 2);
+        REQUIRE(nodes1[0] == 1);
+        REQUIRE(nodes1[1] == 2);
+
+        std::vector<double> edges1 = g.GetWeights(1, 2);
+        REQUIRE(edges1.size() == 3);
+        REQUIRE(edges1[0] == 4.2);
+        REQUIRE(edges1[1] == 5.2);
+        REQUIRE(edges1[2] == 6.9);
+
+        std::vector<int> nodes2 = copy.GetNodes();
+        REQUIRE(nodes2.size() == 2);
+        REQUIRE(nodes2[0] == 1);
+        REQUIRE(nodes2[1] == 2);
+
+        std::vector<double> edges2 = copy.GetWeights(1, 2);
+        REQUIRE(edges2.size() == 3);
+        REQUIRE(edges2[0] == 4.2);
+        REQUIRE(edges2[1] == 5.2);
+        REQUIRE(edges2[2] == 6.9);
+      }
+    }
+  }
+}
+*/
+
+SCENARIO("Testing the move assignment") {
+  GIVEN("A graph of int nodes and double edges containing two nodes and some edges") {
+    gdwg::Graph<int, double> g;
+    g.InsertNode(1);
+    g.InsertNode(2);
+    g.InsertEdge(1, 2, 6.9);
+    g.InsertEdge(1, 2, 4.20);
+    g.InsertEdge(1, 2, 5.2);
+    WHEN("We try to move the original graph to a new graph using the move assignment") {
+      gdwg::Graph<int, double> move = std::move(g);
+      THEN("The original should be empty and the new graph should contain the same values that the original used to") {
+        std::vector<int> nodes1 = g.GetNodes();
+        REQUIRE(nodes1.size() == 0);
+
+        std::vector<int> nodes2 = move.GetNodes();
+        REQUIRE(nodes2.size() == 2);
+        REQUIRE(nodes2[0] == 1);
+        REQUIRE(nodes2[1] == 2);
+
+        std::vector<double> edges2 = move.GetWeights(1, 2);
+        REQUIRE(edges2.size() == 3);
+        REQUIRE(edges2[0] == 4.2);
+        REQUIRE(edges2[1] == 5.2);
+        REQUIRE(edges2[2] == 6.9);
+      }
+    }
+  }
+}
+
+// Ensuring that duplicates get removed automatically
+SCENARIO("Testing that duplicate nodes and edges get removed") {
+  GIVEN("An empty graph of ints and doubles") {
+    gdwg::Graph<int, double> g;
+    WHEN("We add duplicate edges and nodes") {
+      g.InsertNode(1);
+      g.InsertNode(1);
+      g.InsertNode(2);
+      g.InsertEdge(1, 2, 6.9);
+      g.InsertEdge(1, 2, 6.9);
+      THEN("The resulting graph should automatically remove the duplicates") {
+        std::vector<int> nodes = g.GetNodes();
+        REQUIRE(nodes.size() == 2);
+        REQUIRE(nodes[0] == 1);
+        REQUIRE(nodes[1] == 2);
+        std::vector<double> edges = g.GetWeights(1, 2);
+        REQUIRE(edges.size() == 1);
+        REQUIRE(edges[0] == 6.9);
+      }
+    }
+  }
+}
 
 SCENARIO("Testing the InsertNode method") {
     GIVEN("An empty graph of int nodes and double edges") {
@@ -358,24 +502,28 @@ SCENARIO("Testing the IsConnected method") {
     }
 }
 
-SCENARIO("Testing the GetNodes method") {
+SCENARIO("Testing the GetNodes method to ensure correct nodes output in correct order") {
     GIVEN("A graph of int nodes and double edges containing two nodes and an edge") {
         gdwg::Graph<int, double> g;
         g.InsertNode(1);
-        g.InsertNode(2);
-        g.InsertEdge(1, 2, 6.9);
+        g.InsertNode(9);
+        g.InsertNode(6);
+        g.InsertNode(5);
+        g.InsertEdge(1, 6, 6.9);
         WHEN("We try to get a vector of nodes using GetNodes") {
             std::vector<int> nodes = g.GetNodes();
-            THEN("The resulting vector should contain all the existing nodes") {
+            THEN("The resulting vector should contain all the existing nodes in the correct order") {
                 REQUIRE(nodes[0] == 1);
-                REQUIRE(nodes[1] == 2);
+                REQUIRE(nodes[1] == 5);
+                REQUIRE(nodes[2] == 6);
+                REQUIRE(nodes[3] == 9);
             }
         }
     }
 }
 
-SCENARIO("Testing the GetConnected method") {
-  GIVEN("A graph of int nodes and double edges containing two nodes and an edge") {
+SCENARIO("Testing the GetConnected method to ensure correct nodes output in correct order") {
+  GIVEN("A graph of int nodes and double edges containing some nodes and some edges") {
     gdwg::Graph<int, double> g;
     g.InsertNode(1);
     g.InsertNode(2);
@@ -395,7 +543,7 @@ SCENARIO("Testing the GetConnected method") {
   }
 }
 
-SCENARIO("Testing the GetWeights method") {
+SCENARIO("Testing the GetWeights method to ensure correct weights output in correct order") {
   GIVEN("A graph of int nodes and double edges containing two nodes and some edges") {
     gdwg::Graph<int, double> g;
     g.InsertNode(1);
@@ -562,8 +710,10 @@ SCENARIO("Testing the end and cend methods simultaneously (successful case)") {
   }
 }
 
+//  TODO
+// not sure how to ensure that end returns the equiv of begin()
 /*
-SCENARIO("Testing the end and cend methods simultaneously on an empty graph(successful case)") {
+SCENARIO("Testing the end and cend methods simultaneously on an empty graph") {
   GIVEN("A graph of int nodes and double edges containing two nodes and some edges") {
     gdwg::Graph<int, double> g;
     WHEN("We try to access the past-the-end element in the graph using the end method") {
@@ -667,7 +817,7 @@ SCENARIO("Checking that the << friend operator works with a simple graph") {
       s << g1;
       THEN("The output stream should print the contents of the graph in the correct order") {
         std::cout << "printing g1 " << g1;
-        REQUIRE(strcmp(s.str(), "1 (\n  2 | 6.9\n)\n2 (\n  3 | 1.1\n)\n3 (\n  2 | 1.2\n  2 | 1.4\n)") == 0);
+        REQUIRE(strcmp(s.str(), "1 (\n  2 | 6.9\n)\n2 (\n  3 | 1.1\n)\n3 (\n  2 | 1.2\n  2 | 1.4\n)\n") == 0);
       }
     }
   }
@@ -810,7 +960,6 @@ SCENARIO("Testing for exception in GetWeights when the src or dst node doesn't e
     }
   }
 }
-
 
 SCENARIO("a default constructed graph") {
   gdwg::Graph<int, double> graph1;

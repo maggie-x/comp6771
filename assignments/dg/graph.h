@@ -45,7 +45,7 @@ class Graph {
           return *(a.val) < *(b.val);
       }
 
-      bool InsertOutgoing(std::shared_ptr<N> dst, const E &weight) { // pass in shared ptr after finding node in set of nodes
+      bool InsertOutgoing (std::shared_ptr<N> dst, const E &weight) { // pass in shared ptr after finding node in set of nodes
           // std::cout << "InsertOutgoing(" << *dst << ", " << weight << ")" << std::endl;
 
           Edge e = std::make_pair(dst, std::make_shared<E>(weight));
@@ -64,16 +64,28 @@ class Graph {
         // not found
         return false;
       }
-
-      /*void ReplaceOutgoing(const Node &new_dst, const Node &old_dst) {
-        for (Edge e : edges_) {
-          if (*(e.first) == old_dst) {
-            InsertOutgoing(new_dst.val, *(e.second));   // insert the new edge
-            edges_.erase(e);                      // delete the old edge
+/*
+      void ReplaceOutgoing( Node &new_dst, Node &old_dst) {
+        // edge case for edge connecting old_dst to itself
+        if (*(old_dst.val) == *val) {
+          for (auto e : edges_) {
+            if (*(e.first) == *(old_dst.val)) {
+              new_dst.InsertOutgoing(new_dst.val, *(e.second));
+              edges_.erase(e);
+            }
           }
         }
-      }*/
 
+        else {
+          for (Edge e : edges_) {
+            if (*(e.first) == *(old_dst.val)) {                // if this edge is going to the node being replaced
+              InsertOutgoing(new_dst.val, *(e.second));   // insert the new edge
+              edges_.erase(e);                      // delete the old edge
+            }
+          }
+        }
+      }
+*/
       void CleanOutgoing(const N &src) {
         // std::cout << "CleanOutgoing(" << src << ")" << std::endl;
         auto it = edges_.cbegin();
@@ -296,7 +308,27 @@ class Graph {
     } 
   }
 
+  // MOVE CONSTRUCTOR
+  Graph(Graph<N,E> &&g) : nodes_{std::move(g.nodes_)} {
+    //std::cout << "MOVE CONSTRUCTOR CALLED" << std::endl;
+  }
+
   ~Graph() = default;
+
+  // COPY ASSIGNMENT
+  gdwg::Graph<N, E>& operator=(const gdwg::Graph<N, E>& g) {
+    Graph g_copy{g};
+    std::swap(g_copy, this);
+    return this;
+  }
+
+  // MOVE ASSIGNMENT
+  gdwg::Graph<N, E>& operator=(gdwg::Graph<N, E>&& g) {
+    Graph g_move{g};
+    std::swap(g_move, this);
+    return this;
+  }
+
   //    METHODS
 
   // inserts node into a graph
@@ -318,10 +350,10 @@ class Graph {
     friend bool operator==(const gdwg::Graph<N, E>& g1, const gdwg::Graph<N, E>& g2) {
         // check both graphs have same nodes and edges
         for (const auto n : g1.nodes_) {
+         // for (const auto it = g1.nodes_.begin(); it != g1.nodes_.end(); ++it) {
             // checking nodes
             if (g2.nodes_.find(n) != g2.nodes_.end()) {
-                auto n2_iterator = g2.nodes_.find(n);
-                auto n2 = *n2_iterator;     // this is the corresponding node in g2
+                auto n2 = *(g2.nodes_.find(n));     // this is the corresponding node in g2
                 // check edges
                 for (auto e : n.edges_) {
                     // if the corresponding node in the second graph has the same edge, continue checking
@@ -332,9 +364,7 @@ class Graph {
                     for (auto e2 : n2.edges_) {
                         if (*(e2.second) == weight) break;
                         count++;
-                        if (count == n2.edges_.size()) {
-                          return false; // if we reach the end of n2 then the edge doesnt exist
-                        }
+                        if (count == n2.edges_.size()) return false; // if we reach the end of n2 then the edge doesnt exist
                     }
                 }
             }
@@ -361,7 +391,7 @@ class Graph {
 
       return os;
   }
-
+    std::set<Node> get_nodes() {return nodes_;}
 private:
     std::set<Node> nodes_;
 };
