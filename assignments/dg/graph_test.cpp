@@ -935,6 +935,10 @@ SCENARIO("Testing for exception in GetConnected when the src node doesn't exist 
   }
 }
 
+// CUSTOM ITERATOR FUNCTIONALITY TESTING STARTS HERE !!!!!!!!!! >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>.
+
+SCENARIO("")
+
 SCENARIO("Testing for exception in GetWeights when the src or dst node doesn't exist in graph") {
   GIVEN("An graph of int nodes and double edges containing two nodes and some edges") {
     gdwg::Graph<int, double> g;
