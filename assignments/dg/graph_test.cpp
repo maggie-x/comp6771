@@ -33,6 +33,7 @@ DONE:
 - do we need a pointer type for our iterator?
 
 TODO:
+[x] fix ReplaceOutgoing
 [ ] more efficient method for bool operator==?
 [ ] erase changed to `DeleteNode`??
 [ ] more thorough tests

@@ -35,15 +35,10 @@ class Graph {
     /* ---- NODE CLASS (HELPER CLASS) ---- */
 
     struct Node {
-      Node(const N &val) : val(std::make_shared<N>(val)), edges_() {}
-
-      // Node move constructor
-      // Node(Node &&node) : edges_(std::move(node.edges_)) {
-      //   std::cout << "node which we moved to has edges " << edges_.size() << std::endl;
-      // }
       std::shared_ptr<N> val;
       std::set<Edge, edge_set_comparator> edges_;
 
+      Node(const N &val) : val(std::make_shared<N>(val)), edges_() {}
 
       friend bool operator==(const Node &a, const Node &b) {
           return *(a.val) ==  *(b.val);
@@ -146,6 +141,8 @@ class Graph {
 
           return os;
       }
+
+      
     };
 
 
@@ -234,7 +231,7 @@ class Graph {
   const_reverse_iterator rbegin() const { return crbegin(); }
   const_reverse_iterator rend() const { return crend(); }
 
-  const_iterator find(const N& a, const N& b, const E& weight) {
+  const_iterator find(const N& a, const N& b, const E& weight) const {
     const auto a_node = nodes_.find(Node{a});
     const auto b_node = a_node->FindEdge(b, weight);
 
@@ -335,11 +332,11 @@ class Graph {
   bool Replace(const N& oldData, const N& newData);
   void MergeReplace(const N& oldData, const N& newData);
   void Clear();
-  bool IsNode(const N& val);
-  bool IsConnected(const N& src, const N& dst);
-  std::vector<N> GetNodes();
-  std::vector<N> GetConnected(const N& src);
-  std::vector<E> GetWeights(const N& src, const N& dst);
+  bool IsNode(const N& val) const;
+  bool IsConnected(const N& src, const N& dst) const;
+  std::vector<N> GetNodes() const;
+  std::vector<N> GetConnected(const N& src) const;
+  std::vector<E> GetWeights(const N& src, const N& dst) const;
   
   
   //  FRIENDS (stay in the .h file)

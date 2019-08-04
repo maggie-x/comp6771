@@ -112,7 +112,7 @@ void gdwg::Graph<N,E>::MergeReplace(const N& oldData, const N& newData) {
 }
 
 template <typename N, typename E>
-bool gdwg::Graph<N,E>::IsNode(const N &val) {
+bool gdwg::Graph<N,E>::IsNode(const N &val) const {
     return nodes_.find(Node{val}) != nodes_.end();
 }
 
@@ -126,7 +126,7 @@ void gdwg::Graph<N,E>::Clear() {
 }
 
 template <typename N, typename E>
-bool gdwg::Graph<N,E>::IsConnected(const N& src, const N& dst){
+bool gdwg::Graph<N,E>::IsConnected(const N& src, const N& dst) const{
 
     if (!IsNode(src) || !IsNode(dst)) {
         throw std::runtime_error("Cannot call Graph::IsConnected if src or dst node don't exist in the graph");
@@ -139,7 +139,7 @@ bool gdwg::Graph<N,E>::IsConnected(const N& src, const N& dst){
 }
 
 template <typename N, typename E>
-std::vector<N> gdwg::Graph<N,E>::GetNodes() {
+std::vector<N> gdwg::Graph<N,E>::GetNodes() const {
   std::vector<N> vector_of_nodes;
   for (auto it = nodes_.cbegin(); it != nodes_.cend(); ++it) {
     vector_of_nodes.emplace_back((*(it->val)));
@@ -150,7 +150,7 @@ std::vector<N> gdwg::Graph<N,E>::GetNodes() {
 }
 
 template <typename N, typename E>
-std::vector<N> gdwg::Graph<N,E>::GetConnected(const N& src) {
+std::vector<N> gdwg::Graph<N,E>::GetConnected(const N& src) const {
   if (!IsNode(src)) {
     throw std::out_of_range("Cannot call Graph::GetConnected if src doesn't exist in the graph");
   }
@@ -162,7 +162,7 @@ std::vector<N> gdwg::Graph<N,E>::GetConnected(const N& src) {
 }
 
 template <typename N, typename E>
-std::vector<E> gdwg::Graph<N,E>::GetWeights(const N& src, const N& dst) {
+std::vector<E> gdwg::Graph<N,E>::GetWeights(const N& src, const N& dst) const {
   if (!IsNode(src) || !IsNode(dst)) {
     throw std::out_of_range("Cannot call Graph::GetWeights if src or dst node don't exist in the graph");
   }
