@@ -34,6 +34,7 @@ DONE:
 
 TODO:
 [ ] more efficient method for bool operator==?
+[ ] erase changed to `DeleteNode`??
 [ ] more thorough tests
 - using non-primitive types
 - self-connected edges
@@ -186,7 +187,7 @@ SCENARIO("Construct a new graph from an existing graph with the move constructor
 }
 
 
-/*
+
 SCENARIO("Testing the copy assignment") {
   GIVEN("A graph of int nodes and double edges containing two nodes and some edges") {
     gdwg::Graph<int, double> g;
@@ -220,10 +221,19 @@ SCENARIO("Testing the copy assignment") {
         REQUIRE(edges2[1] == 5.2);
         REQUIRE(edges2[2] == 6.9);
       }
+
+      WHEN("we change the original") {
+        g.InsertNode(-99);
+        THEN("the copy and the original should be two independent graphs, and changes should not be reflected in both") {
+          REQUIRE(g.IsNode(-99));
+          REQUIRE(!copy.IsNode(-99));
+
+        }
+      }
     }
   }
 }
-*/
+
 
 SCENARIO("Testing the move assignment") {
   GIVEN("A graph of int nodes and double edges containing two nodes and some edges") {
@@ -615,7 +625,7 @@ SCENARIO("Testing the (bool) erase method (unsuccessful case)") {
     g.InsertNode(1);
     g.InsertNode(2);
     g.InsertEdge(1, 2, 6.9);
-    WHEN("We try to erase an existing edge from the graph using the erase method") {
+    WHEN("We try to erase an non-existent edge from the graph using the erase method") {
       bool erase = g.erase(1, 2, 7);
       THEN("The erase method should return false and the graph should remain unchanged") {
         REQUIRE(erase == false);
@@ -628,7 +638,7 @@ SCENARIO("Testing the (bool) erase method (unsuccessful case)") {
   }
 }
 
-/*  TODO
+
 SCENARIO("Testing the (const_iterator) erase method (successful case)") {
   GIVEN("A graph of int nodes and double edges containing two nodes and some edges") {
     gdwg::Graph<int, double> g;
@@ -650,7 +660,7 @@ SCENARIO("Testing the (const_iterator) erase method (successful case)") {
     }
   }
 }
-*/
+
 
 SCENARIO("Testing the begin and cbegin methods simultaneously (successful case)") {
   GIVEN("A graph of int nodes and double edges containing two nodes and some edges") {
