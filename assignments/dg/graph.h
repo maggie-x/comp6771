@@ -33,6 +33,11 @@ class Graph {
 
     struct Node {
       Node(const N &val) : val(std::make_shared<N>(val)), edges_() {}
+
+      // Node move constructor
+      // Node(Node &&node) : edges_(std::move(node.edges_)) {
+      //   std::cout << "node which we moved to has edges " << edges_.size() << std::endl;
+      // }
       std::shared_ptr<N> val;
       std::set<Edge, edge_set_comparator> edges_;
 
@@ -296,11 +301,8 @@ class Graph {
 
   // COPY CONSTRUCTOR
   Graph(const Graph<N, E> &g) {
-    // each node needs its own N on the heap now...
-    // must do this first before you add the edges
 
-    // implement graph iterator !! 
-
+    // we just populate a completely new graph which its own copy of the objects on the heap
     for (auto it = g.begin(); it != g.end(); ++it) {
       InsertNode(std::get<0>(*it));
       InsertNode(std::get<1>(*it));
@@ -384,9 +386,13 @@ class Graph {
 
     friend std::ostream& operator<<(std::ostream &os, const Graph<N, E> &graph) {
         //std::cout << "--- PRINTING OUT GRAPH --- " << std::endl;
-        //std::cout << "nodes in graph: " << graph.nodes_.size() << std::endl;
         for (auto it = graph.nodes_.cbegin(); it != graph.nodes_.cend(); ++it) {
             os << *(it);
+        }
+
+        if (graph.nodes_.size() == 0) {
+          os << std::endl; 
+          // as per forum question https://webcms3.cse.unsw.edu.au/COMP6771/19T2/forums/2732812
         }
 
       return os;
