@@ -33,7 +33,9 @@ DONE:
 - do we need a pointer type for our iterator?
 
 TODO:
+[x] fix ReplaceOutgoing
 [ ] more efficient method for bool operator==?
+[ ] erase changed to `DeleteNode`??
 [ ] more thorough tests
 - using non-primitive types
 - self-connected edges
@@ -56,7 +58,7 @@ TODO:
 
 #include "assignments/dg/graph.h"
 #include "catch.h"
-#include "strstream"
+#include <sstream>
 #include <algorithm>
 
 template<typename T>
@@ -127,44 +129,34 @@ SCENARIO("Constructing a graph using the initializer list constructor))") {
     }
 }
 
-/*
 SCENARIO("Construct a new graph from an existing graph with the copy constructor") {
-  GIVEN("A graph of int nodes and double edges containing two nodes and some edges") {
-    gdwg::Graph<int, double> g;
-    g.InsertNode(1);
-    g.InsertNode(2);
-    g.InsertEdge(1, 2, 6.9);
-    g.InsertEdge(1, 2, 4.20);
-    g.InsertEdge(1, 2, 5.2);
-    WHEN("We try to construct a second graph using the copy constructor and the first graph") {
-      gdwg::Graph<int, double> g2{g};
-      THEN("The resulting graph and original graph should contain the same values") {
-        std::vector<int> nodes1 = g.GetNodes();
-        REQUIRE(nodes1.size() == 2);
-        REQUIRE(nodes1[0] == 1);
-        REQUIRE(nodes1[1] == 2);
+  std::string sydney{"sydney"};
+  std::string melbourne{"melbourne"};
+  std::string perth{"perth"};
 
-        std::vector<double> edges1 = g.GetWeights(1, 2);
-        REQUIRE(edges1.size() == 3);
-        REQUIRE(edges1[0] == 4.2);
-        REQUIRE(edges1[1] == 5.2);
-        REQUIRE(edges1[2] == 6.9);
+  auto syd_melb = std::make_tuple(sydney, melbourne, 5.4);
+  auto melb_per = std::make_tuple(melbourne, perth, 20.1);
 
-        std::vector<int> nodes2 = g2.GetNodes();
-        REQUIRE(nodes2.size() == 2);
-        REQUIRE(nodes2[0] == 1);
-        REQUIRE(nodes2[1] == 2);
+  auto e = std::vector<std::tuple<std::string, std::string, double>>{syd_melb, melb_per};
+  gdwg::Graph<std::string, double> aus{e.begin(), e.end()};
 
-        std::vector<double> edges2 = g2.GetWeights(1, 2);
-        REQUIRE(edges2.size() == 3);
-        REQUIRE(edges2[0] == 4.2);
-        REQUIRE(edges2[1] == 5.2);
-        REQUIRE(edges2[2] == 6.9);
+  WHEN("we construct a new graph from this graph") {
+    gdwg::Graph<std::string, double> aus2{aus};
+
+    THEN("the two graphs should equal") {
+      REQUIRE(aus == aus2);
+    }
+
+    WHEN("we change the original graph") {
+      aus.InsertNode("random node");
+
+      THEN("the two graphs should be independent of each other") {
+        REQUIRE(aus != aus2);
       }
     }
   }
 }
-*/
+
 
 SCENARIO("Construct a new graph from an existing graph with the move constructor") {
   GIVEN("A graph of int nodes and double edges containing two nodes and some edges") {
@@ -196,7 +188,7 @@ SCENARIO("Construct a new graph from an existing graph with the move constructor
 }
 
 
-/*
+
 SCENARIO("Testing the copy assignment") {
   GIVEN("A graph of int nodes and double edges containing two nodes and some edges") {
     gdwg::Graph<int, double> g;
@@ -230,10 +222,19 @@ SCENARIO("Testing the copy assignment") {
         REQUIRE(edges2[1] == 5.2);
         REQUIRE(edges2[2] == 6.9);
       }
+
+      WHEN("we change the original") {
+        g.InsertNode(-99);
+        THEN("the copy and the original should be two independent graphs, and changes should not be reflected in both") {
+          REQUIRE(g.IsNode(-99));
+          REQUIRE(!copy.IsNode(-99));
+
+        }
+      }
     }
   }
 }
-*/
+
 
 SCENARIO("Testing the move assignment") {
   GIVEN("A graph of int nodes and double edges containing two nodes and some edges") {
@@ -625,7 +626,7 @@ SCENARIO("Testing the (bool) erase method (unsuccessful case)") {
     g.InsertNode(1);
     g.InsertNode(2);
     g.InsertEdge(1, 2, 6.9);
-    WHEN("We try to erase an existing edge from the graph using the erase method") {
+    WHEN("We try to erase an non-existent edge from the graph using the erase method") {
       bool erase = g.erase(1, 2, 7);
       THEN("The erase method should return false and the graph should remain unchanged") {
         REQUIRE(erase == false);
@@ -638,7 +639,7 @@ SCENARIO("Testing the (bool) erase method (unsuccessful case)") {
   }
 }
 
-/*  TODO
+
 SCENARIO("Testing the (const_iterator) erase method (successful case)") {
   GIVEN("A graph of int nodes and double edges containing two nodes and some edges") {
     gdwg::Graph<int, double> g;
@@ -660,7 +661,7 @@ SCENARIO("Testing the (const_iterator) erase method (successful case)") {
     }
   }
 }
-*/
+
 
 SCENARIO("Testing the begin and cbegin methods simultaneously (successful case)") {
   GIVEN("A graph of int nodes and double edges containing two nodes and some edges") {
@@ -813,11 +814,12 @@ SCENARIO("Checking that the << friend operator works with a simple graph") {
     g1.InsertEdge(3, 2, 1.2);
     g1.InsertEdge(3, 2, 1.4);
     WHEN("We try to use the << operator to print out the graph in order") {
-      std::strstream s;
+      std::stringstream s;
       s << g1;
       THEN("The output stream should print the contents of the graph in the correct order") {
         std::cout << "printing g1 " << g1;
-        REQUIRE(strcmp(s.str(), "1 (\n  2 | 6.9\n)\n2 (\n  3 | 1.1\n)\n3 (\n  2 | 1.2\n  2 | 1.4\n)\n") == 0);
+        std::string expected("1 (\n  2 | 6.9\n)\n2 (\n  3 | 1.1\n)\n3 (\n  2 | 1.2\n  2 | 1.4\n)\n");
+        REQUIRE(s.str() == expected);
       }
     }
   }
