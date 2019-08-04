@@ -90,13 +90,10 @@ void gdwg::Graph<N,E>::MergeReplace(const N& oldData, const N& newData) {
     // now we need to connect all the incoming edges to the replacing node
     // iterate through each node in the graph and find ones that are outgoing to the old node
     for (auto n : nodes_) {
-      //n.ReplaceOutgoing(new_node, old_node);
-        for (auto e : n.edges_) {        // iterating through each edge in the node
-            if (*(e.first) == oldData) {
-                InsertEdge(*(n.val), *(new_node.val), *(e.second));   // insert the new edge
-                n.edges_.erase(e);                      // delete the old edge
-            }
-        }
+        auto new_n = n;
+        nodes_.erase(n);
+        n.ReplaceOutgoing(*(old_node.val), new_node.val);
+        nodes_.insert(n);
     }
   nodes_.erase(old_node_it); // delete the old node from the graph (along with it's outgoing edges, but incoming edges still exist)
 

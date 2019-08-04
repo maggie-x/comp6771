@@ -72,28 +72,17 @@ class Graph {
         // not found
         return false;
       }
-/*
-      void ReplaceOutgoing( Node &new_dst, Node &old_dst) {
-        // edge case for edge connecting old_dst to itself
-        if (*(old_dst.val) == *val) {
-          for (auto e : edges_) {
-            if (*(e.first) == *(old_dst.val)) {
-              new_dst.InsertOutgoing(new_dst.val, *(e.second));
-              edges_.erase(e);
-            }
+
+      void ReplaceOutgoing(const N& old_dst, std::shared_ptr<N> new_dst) {
+        for (auto it = edges_.cbegin(); it != edges_.cend(); ++it) {
+          if (*(it->first) == old_dst) {
+            InsertOutgoing(new_dst, *(it->second)); // inserting the exact same edge, just new destination
           }
         }
 
-        else {
-          for (Edge e : edges_) {
-            if (*(e.first) == *(old_dst.val)) {                // if this edge is going to the node being replaced
-              InsertOutgoing(new_dst.val, *(e.second));   // insert the new edge
-              edges_.erase(e);                      // delete the old edge
-            }
-          }
-        }
+        CleanOutgoing(old_dst);
       }
-*/
+
       void CleanOutgoing(const N &src) {
         // std::cout << "CleanOutgoing(" << src << ")" << std::endl;
         auto it = edges_.cbegin();
