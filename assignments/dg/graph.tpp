@@ -27,7 +27,6 @@ bool gdwg::Graph<N,E>::InsertEdge(const N& src, const N& dst, const E& w) {
 
 template <typename N, typename E>
 bool gdwg::Graph<N,E>::DeleteNode(const N& val) {
-    std::cout << "-- DeleteNode(" << val << ")" << std::endl;
     if (!IsNode(val)) return false; // if the node doesn't exist, there's nothing to delete
 
     auto val_it = nodes_.find(Node{val});
@@ -80,7 +79,7 @@ void gdwg::Graph<N,E>::MergeReplace(const N& oldData, const N& newData) {
     auto old_node = *old_node_it;       // this is the node being replaced
 
     auto new_node_it = nodes_.find(Node{newData});
-    auto new_node = *new_node_it;   // this is the replacing node
+    auto new_node = *new_node_it;       // this is the replacing node
 
     // iterate through each edge in the old node and replace with edge sourcing from the new node
     for (Edge e : old_node.edges_) {
@@ -89,26 +88,25 @@ void gdwg::Graph<N,E>::MergeReplace(const N& oldData, const N& newData) {
 
     // now we need to connect all the incoming edges to the replacing node
     // iterate through each node in the graph and find ones that are outgoing to the old node
-    for (auto n : nodes_) {
+   /* for (auto n : nodes_) {
         auto new_n = n;
         nodes_.erase(n);
+        //std::cout << "presegfault" << std::endl;
         n.ReplaceOutgoing(*(old_node.val), new_node.val);
+      //std::cout << "postsegfault" << std::endl;
         nodes_.insert(n);
+    }*/
+  for (auto n : nodes_) {
+    //n.ReplaceOutgoing(new_node, old_node);
+    for (auto e : n.edges_) {        // iterating through each edge in the node
+      if (*(e.first) == oldData) {
+        InsertEdge(*(n.val), *(new_node.val), *(e.second));   // insert the new edge
+        n.edges_.erase(e);                      // delete the old edge
+      }
     }
+  }
   nodes_.erase(old_node_it); // delete the old node from the graph (along with it's outgoing edges, but incoming edges still exist)
-
   return;
-
-    // need to completely remove the old node
-        // if i delete the old node, how do i access it's existing edges that need to be redirected?
-        // keep a copy of the old node (and hence a copy of all its edges)
-        // iterate through every node and find outgoing edges to the old node. delete/replace those edges (using erase(iterator))
-        // and replace with edges that now go to the new/replacing node
-        // finally, go through the edges of the copied old node and recreate them with the replacing node
-
-    // then connect the previous edges to the new node (create new edges)
-    // then remove any duplicate edges
-
 }
 
 template <typename N, typename E>
@@ -144,8 +142,6 @@ std::vector<N> gdwg::Graph<N,E>::GetNodes() const {
   for (auto it = nodes_.cbegin(); it != nodes_.cend(); ++it) {
     vector_of_nodes.emplace_back((*(it->val)));
   }
-
-  // std::sort(vector_of_nodes.begin(), vector_of_nodes.end());
   return vector_of_nodes;
 }
 

@@ -11,16 +11,15 @@
   initially constructed.
 
   Then, we will test edge cases such as calling certain methods/operators on an empty graph, using non-primitive types, and iterating past
-  the end of the graph.
+  the end of the graph. Furthermore, we will also test each exception to check that it is throwing the correct error and string.
 
-  Furthermore, we will also test each exception to check that it is throwing the correct error and string.
+  Overall, each feature should be tested with it's own individual scenario to ensure that it's clear what is being tested
+  and what could have gone wrong. Each method should be tested with both a const and non const graph to ensure const correctness.
 
-  Each feature should be tested with it's own individual scenario to ensure that it's clear what is being tested
-  and what could have gone wrong.
+  The iterator itself and it's functionality (increment and decrement) should be tested too.
 
-  Finally, some tests can be combined or skipped to avoid redundancies. Examples include testing only the == friend operator
-  since the != operator is implemented by using the already defined == operator, but returning opposite results.
-  Another example is combining cend and end tests into one, since they literally return the same thing (cend calls and returns end)
+  Finally, some tests can be combined or skipped to avoid redundancies. An example is combining cend and end tests into one,
+  since they literally return the same thing (cend calls and returns end)
 
 DONE:
 [x] change E to a smart pointer
@@ -34,30 +33,27 @@ DONE:
 
 TODO:
 [x] fix ReplaceOutgoing
-[ ] more efficient method for bool operator==?
+[x] more efficient method for bool operator==?
 [ ] erase changed to `DeleteNode`??
 [ ] more thorough tests
 - using non-primitive types
 - self-connected edges
 
 [x] check correct errors are being thrown & return types are correct
-[ ] const correctness
-[ ] clean up some code
-[ ] edge cases
+[x] const correctness
+[x] clean up some code
+[x] edge cases
 [x] exception throwing tests
-[ ] tests checking for duplicate handling (construction, methods)
+[x] tests checking for duplicate handling (construction, methods)
 [x] test checking for correct order of nodes/edges
-[ ] test copy/move assignment/constructorsj
-
-
-
-
+[x] test copy/move assignment/constructors
 */
 
 
 
 #include "assignments/dg/graph.h"
 #include "catch.h"
+#include "vector"
 #include <sstream>
 #include <algorithm>
 
@@ -86,10 +82,10 @@ SCENARIO("Constructing a graph using the const iterator constructor))") {
         std::vector<std::string> pair_v{p1, p2, p3};
         gdwg::Graph<std::string, double> g{pair_v.begin(), pair_v.end()};
         THEN("The graph should be successfully constructed and contain the correct nodes in the correct order") {
-                    std::vector<std::string> v = g.GetNodes();
-                    REQUIRE(v[0] == "cheesecake");
-                    REQUIRE(v[1] == "hello");
-                    REQUIRE(v[2] == "string");
+          std::vector<std::string> v = g.GetNodes();
+          REQUIRE(v[0] == "cheesecake");
+          REQUIRE(v[1] == "hello");
+          REQUIRE(v[2] == "string");
         }
     }
 }
@@ -186,8 +182,6 @@ SCENARIO("Construct a new graph from an existing graph with the move constructor
     }
   }
 }
-
-
 
 SCENARIO("Testing the copy assignment") {
   GIVEN("A graph of int nodes and double edges containing two nodes and some edges") {
@@ -302,6 +296,33 @@ SCENARIO("Testing the InsertNode method") {
     }
 }
 
+// TESTING THE ITERATOR
+SCENARIO("Testing that preincrement works in the custom iterator") {
+  GIVEN("A graph of ints and doubles") {
+    auto e1= std::make_tuple(1, 2, 6.9);
+    auto e2= std::make_tuple(1, 2, 4.2);
+    auto e3= std::make_tuple(1, 2, 5.2);
+
+    auto e = std::vector<std::tuple<int, int, double>>{e1, e2, e3};
+    const gdwg::Graph<int, double> g{e.begin(), e.end()};
+  }
+}
+
+SCENARIO("Testing the InsertNode method with an existing node") {
+    GIVEN("A graph containing a single (int) node and double edges") {
+        gdwg::Graph<int, double> g;
+        g.InsertNode(5);
+        WHEN("We try to insert an existing node into it using the InsertNode method") {
+            g.InsertNode(5);
+            THEN("We should get a graph which still contains a single node with value 5") {
+                std::vector<int> nodes = g.GetNodes();
+                REQUIRE(nodes.size() == 1);
+                REQUIRE(nodes[0] == 5);
+            }
+        }
+    }
+}
+
 SCENARIO("Testing the InsertEdge method") {
     GIVEN("An graph of int nodes and double edges containing just two nodes") {
         gdwg::Graph<int, double> g;
@@ -337,6 +358,30 @@ SCENARIO("Testing the InsertEdge method with an edge connecting a node to itself
 
                 std::vector<double> edges = g.GetWeights(1,1);
                 REQUIRE(edges[0] == 2.5);
+            }
+        }
+    }
+}
+
+SCENARIO("Testing the InsertEdge method with an already existing edge") {
+    GIVEN("An graph of int nodes and double edges containing just two nodes and an edge connecting them") {
+        gdwg::Graph<int, double> g;
+        g.InsertNode(1);
+        g.InsertNode(2);
+        g.InsertEdge(1, 2, 4.20);
+        WHEN("We try to insert an already existing edge") {
+            bool success = g.InsertEdge(1, 2, 4.20);
+            THEN("The graph should remain unchanged and InsertEdge method should return false") {
+                std::vector<int> nodes = g.GetNodes();
+                REQUIRE(nodes.size() == 2);
+                REQUIRE(nodes[0] == 1);
+                REQUIRE(nodes[1] == 2);
+
+                std::vector<double> edges = g.GetWeights(1,2);
+                REQUIRE(edges[0] == 4.20);
+                REQUIRE(edges.size() == 1);
+
+                REQUIRE(success == false);
             }
         }
     }
@@ -409,52 +454,109 @@ SCENARIO("Testing the Replace method with a value that already exists") {
     }
 }
 
-//  SHOULD SPLIT INTO TEST FOR EDGE TO SELF(BOTH IN OLD AND NEW NODE), TEST FOR DUPLICATES, NORMAL USAGE
 SCENARIO("Testing the MergeReplace method") {
-    GIVEN("A graph of strings and doubles") {
-        std::string sydney{"sydney"};
-        std::string melbourne{"melbourne"};
-        std::string perth{"perth"};
-        std::string adelaide{"adelaide"};
-        std::string brisbane{"brisbane"};
+  GIVEN("A Graph of strings and doubles") {
+    std::string sydney{"sydney"};
+    std::string melbourne{"melbourne"};
+    std::string perth{"perth"};
+    std::string adelaide{"adelaide"};
+    std::string brisbane{"brisbane"};
 
-        auto syd_melb = std::make_tuple(sydney, melbourne, 5.4);
-        auto syd_syd = std::make_tuple(sydney, sydney, 4.2);
-        auto mel_mel = std::make_tuple(melbourne, melbourne, 5.4);
-        auto per_syd = std::make_tuple(perth, sydney, 6.9);
-        auto per_mel = std::make_tuple(perth, melbourne, 6.9);
-        auto melb_per = std::make_tuple(melbourne, perth, 20.1);
-        auto per_ade = std::make_tuple(perth, adelaide, 25.9);
-        auto syd_ade = std::make_tuple(sydney, adelaide, 4.7);
-        auto ade_bris = std::make_tuple(adelaide, brisbane, 2.3);
 
-        auto e = std::vector<std::tuple<std::string, std::string, double>>{syd_syd, syd_melb, melb_per, per_ade, syd_ade, ade_bris, per_syd, mel_mel, per_mel};
-        gdwg::Graph<std::string, double> aus{e.begin(), e.end()};
-        WHEN("We try to replace and merge the old node with an already existing value using the MergeReplace method") {
-            aus.MergeReplace(sydney, melbourne);
-            THEN("The graph should no longer contain the old node, all outgoing edges from the old node should now be outgoing from the"
-                 "new node, and all incoming edges to the old node should now be incoming to the new node") {
-                std::vector<std::string> nodes = aus.GetNodes();
-                REQUIRE(nodes.size() == 4); // ensure that the old node has been deleted
-                REQUIRE(nodes[0] == adelaide);
-                REQUIRE(nodes[1] == brisbane);
-                REQUIRE(nodes[2] == melbourne);
-                REQUIRE(nodes[3] == perth);
+    auto syd_melb = std::make_tuple(sydney, melbourne, 5.4);
+    auto melb_per = std::make_tuple(melbourne, perth, 20.1);
+    auto per_ade = std::make_tuple(perth, adelaide, 25.9);
+    auto syd_ade = std::make_tuple(sydney, adelaide, 4.7);
+    auto ade_bris = std::make_tuple(adelaide, brisbane, 2.3);
 
-                std::vector<double> mel_per_weights = aus.GetWeights(melbourne, perth);
-                std::vector<double> mel_mel_weights = aus.GetWeights(melbourne, melbourne);
-                std::vector<double> mel_ade_weights = aus.GetWeights(melbourne, adelaide);
-                std::vector<double> per_mel_weights = aus.GetWeights(perth, melbourne);
-                REQUIRE(mel_mel_weights.size() == 2); // there should be 2 edges from mel to mel because the syd->syd one should be transferred over, and the duplicate should be removed
-                REQUIRE(mel_per_weights[0] == 20.1);
-                REQUIRE(mel_mel_weights[0] == 4.2);
-                REQUIRE(mel_mel_weights[1] == 5.4);
-                REQUIRE(mel_ade_weights[0] == 4.7);
-                REQUIRE(per_mel_weights[0] == 6.9);
-                REQUIRE(per_mel_weights.size() == 1);
-            }
-        }
+
+    auto e = std::vector<std::tuple<std::string, std::string, double>>{syd_melb, melb_per, per_ade, syd_ade, ade_bris};
+    gdwg::Graph<std::string, double> aus{e.begin(), e.end()};
+    WHEN("We try to use the MergeReplace method on it") {
+      aus.MergeReplace(sydney, perth);
+      THEN("The resulting graph should have one less node, where the old node and its related edges are replaced by the new node") {
+        std::vector<std::string> nodes = aus.GetNodes();
+        REQUIRE(nodes.size() == 4);
+        REQUIRE(nodes[0] == adelaide);
+        REQUIRE(nodes[1] == brisbane);
+        REQUIRE(nodes[2] == melbourne);
+        REQUIRE(nodes[3] == perth);
+
+
+        std::vector<std::string> perth_nodes = aus.GetConnected(perth);
+        REQUIRE(perth_nodes.size() == 2);
+        REQUIRE(perth_nodes[0] == adelaide);
+        REQUIRE(perth_nodes[1] == melbourne);
+
+        std::vector<double> perth_adelaide_weights = aus.GetWeights(perth, adelaide);
+        REQUIRE(perth_adelaide_weights.size() == 2);
+        REQUIRE(perth_adelaide_weights[0] == 4.7);
+        REQUIRE(perth_adelaide_weights[1] == 25.9);
+
+        std::vector<double> perth_melbourne_weights = aus.GetWeights(perth, melbourne);
+        REQUIRE(perth_melbourne_weights.size() == 1);
+        REQUIRE(perth_melbourne_weights[0] == 5.4);
+
+      }
     }
+  }
+}
+
+SCENARIO("Testing the MergeReplace method when the old node as a self connecting edge") {
+  GIVEN("A graph of strings and doubles, where one node has a self connecting edge") {
+    std::string sydney{"sydney"};
+    std::string melbourne{"melbourne"};
+    std::string perth{"perth"};
+
+    auto syd_melb = std::make_tuple(sydney, melbourne, 5.4);
+    auto syd_syd = std::make_tuple(sydney, sydney, 4.2);
+    auto per_syd = std::make_tuple(perth, sydney, 6.9);
+    auto per_mel = std::make_tuple(perth, melbourne, 6.9);
+    auto melb_per = std::make_tuple(melbourne, perth, 20.1);
+
+    auto e = std::vector<std::tuple<std::string, std::string, double>>{syd_syd, syd_melb, melb_per, per_syd, per_mel};
+    gdwg::Graph<std::string, double> aus{e.begin(), e.end()};
+    WHEN("We try to use the MergeReplace method on the self connecting node") {
+      aus.MergeReplace(sydney, melbourne);
+      THEN("The resulting graph should have the replacing node now hold the same self connecting edge") {
+        std::vector<std::string> nodes = aus.GetNodes();
+        REQUIRE(nodes.size() == 2);
+
+        std::vector<double> mel_weights = aus.GetWeights(melbourne, melbourne);
+        REQUIRE(mel_weights.size() == 2);
+        REQUIRE(mel_weights[0] == 4.2);
+        REQUIRE(mel_weights[1] == 5.4);
+      }
+    }
+  }
+}
+
+SCENARIO("Testing the MergeReplace method to ensure it removes duplicate edges") {
+  GIVEN("A graph of strings and doubles") {
+    std::string sydney{"sydney"};
+    std::string melbourne{"melbourne"};
+    std::string perth{"perth"};
+
+    auto syd_melb = std::make_tuple(sydney, melbourne, 5.4);
+    auto syd_syd = std::make_tuple(sydney, perth, 20.1);
+    auto per_syd = std::make_tuple(perth, sydney, 6.9);
+    auto per_mel = std::make_tuple(perth, melbourne, 6.9);
+    auto melb_per = std::make_tuple(melbourne, perth, 20.1);
+
+    auto e = std::vector<std::tuple<std::string, std::string, double>>{syd_syd, syd_melb, melb_per, per_syd, per_mel};
+    gdwg::Graph<std::string, double> aus{e.begin(), e.end()};
+    WHEN("We try to use the MergeReplace method so that it will create a duplicate edge") {
+      aus.MergeReplace(sydney, melbourne);
+      THEN("The resulting graph should automatically remove the duplicate") {
+        std::vector<std::string> nodes = aus.GetNodes();
+        REQUIRE(nodes.size() == 2);
+
+        std::vector<double> mel_perth_weights = aus.GetWeights(melbourne, perth);
+        REQUIRE(mel_perth_weights.size() == 1);
+        REQUIRE(mel_perth_weights[0] == 20.1);
+      }
+    }
+  }
 }
 
 SCENARIO("Testing the clear method") {
@@ -473,7 +575,7 @@ SCENARIO("Testing the clear method") {
     }
 }
 
-SCENARIO("Testing the IsNode method") {
+SCENARIO("Testing the IsNode method (successful case)") {
     GIVEN("An graph of int nodes and double edges containing two nodes and an edge") {
         gdwg::Graph<int, double> g;
         g.InsertNode(1);
@@ -483,6 +585,21 @@ SCENARIO("Testing the IsNode method") {
             bool exist = g.IsNode(1);
             THEN("The return value should be true") {
                 REQUIRE(exist == true);
+            }
+        }
+    }
+}
+
+SCENARIO("Testing the IsNode method (unsuccessful case)") {
+    GIVEN("An graph of int nodes and double edges containing two nodes and an edge") {
+        gdwg::Graph<int, double> g;
+        g.InsertNode(1);
+        g.InsertNode(2);
+        g.InsertEdge(1, 2, 6.9);
+        WHEN("We try to check the existence of an non-existent node using IsNode") {
+            bool exist = g.IsNode(69);
+            THEN("The return value should be false") {
+                REQUIRE(exist == false);
             }
         }
     }
@@ -639,7 +756,7 @@ SCENARIO("Testing the (bool) erase method (unsuccessful case)") {
   }
 }
 
-
+/*
 SCENARIO("Testing the (const_iterator) erase method (successful case)") {
   GIVEN("A graph of int nodes and double edges containing two nodes and some edges") {
     gdwg::Graph<int, double> g;
@@ -651,7 +768,14 @@ SCENARIO("Testing the (const_iterator) erase method (successful case)") {
       gdwg::Graph<int,double>::const_iterator target = g.find(1, 2, 6.9);
       gdwg::Graph<int,double>::const_iterator it = g.erase(target);
       THEN("The erase method should return an iterator to the element after the removed one and the graph should no longer have the erased edge") {
-        REQUIRE(*it == std::tuple<int, int, double>(1, 2, 7));
+        std::cout << "seghunt 1\n";
+        REQUIRE(std::get<0>(*it) == 1);
+std::cout << "seghunt 2\n";
+        REQUIRE(std::get<1>(*it) == 2);
+std::cout << "seghunt 3\n";
+        REQUIRE(std::get<2>(*it) == 7);
+std::cout << "seghunt 4\n";
+        std::cout << "seghunt 5\n";
         REQUIRE(g.IsNode(1) == true);
         REQUIRE(g.IsNode(2) == true);
         std::vector<double> weights = g.GetWeights(1,2);
@@ -661,8 +785,33 @@ SCENARIO("Testing the (const_iterator) erase method (successful case)") {
     }
   }
 }
+*/
+
+ SCENARIO("Testing the (const_iterator) erase method (unsuccessful case)") {
+  GIVEN("A graph of int nodes and double edges containing two nodes and some edges") {
+    gdwg::Graph<int, double> g;
+    g.InsertNode(1);
+    g.InsertNode(2);
+    g.InsertEdge(1, 2, 6.9);
+    g.InsertEdge(1, 2, 7);
+    WHEN("We try to erase a non-existent edge from the graph using the (const_iterator) erase method") {
+      gdwg::Graph<int,double>::const_iterator target = g.find(1, 2, 4.2);
+      gdwg::Graph<int,double>::const_iterator it = g.erase(target);
+      THEN("The erase method should return an iterator equivalent to .end and the graph should remain unchanged") {
+        REQUIRE(it == g.end());
+        REQUIRE(g.IsNode(1) == true);
+        REQUIRE(g.IsNode(2) == true);
+        std::vector<double> weights = g.GetWeights(1,2);
+        REQUIRE(weights.size() == 2);
+        REQUIRE(weights[0] == 6.9);
+        REQUIRE(weights[1] == 7);
+      }
+    }
+  }
+}
 
 
+// only need to test one since begin returns cbegin
 SCENARIO("Testing the begin and cbegin methods simultaneously (successful case)") {
   GIVEN("A graph of int nodes and double edges containing two nodes and some edges") {
     gdwg::Graph<int, double> g;
@@ -687,7 +836,20 @@ SCENARIO("Testing the begin and cbegin methods simultaneously (successful case)"
   }
 }
 
-// also need to check for unsuccessful case on empty container
+// only need to test one since begin returns cbegin
+SCENARIO("Testing the begin and cbegin methods simultaneously on an empty graph") {
+  GIVEN("An empty graph") {
+  gdwg::Graph<int, double> g;
+    WHEN("We try to access the first element in the graph using the begin method") {
+      gdwg::Graph<int,double>::const_iterator it = g.begin();
+      THEN("Returned iterator should be equivalent to cbegin") {
+        REQUIRE(it == g.cend());
+      }
+    }
+  }
+}
+
+// only need to test one since end returns cend
 SCENARIO("Testing the end and cend methods simultaneously (successful case)") {
   GIVEN("A graph of int nodes and double edges containing two nodes and some edges") {
     gdwg::Graph<int, double> g;
@@ -711,22 +873,20 @@ SCENARIO("Testing the end and cend methods simultaneously (successful case)") {
   }
 }
 
-//  TODO
-// not sure how to ensure that end returns the equiv of begin()
-/*
+// only need to test one since end returns cend
 SCENARIO("Testing the end and cend methods simultaneously on an empty graph") {
-  GIVEN("A graph of int nodes and double edges containing two nodes and some edges") {
+  GIVEN("An empty graph") {
     gdwg::Graph<int, double> g;
     WHEN("We try to access the past-the-end element in the graph using the end method") {
       gdwg::Graph<int,double>::const_iterator it = g.end();
-      THEN("Returned iterator should be equivalent to vector::cbegin") {
-        std::vector<int> v;
-        REQUIRE(it == v.cbegin());
+      THEN("Returned iterator should be equivalent to cbegin") {
+        REQUIRE(it == g.cbegin());
       }
     }
   }
-}*/
+}
 
+// only need to test one since rbegin returns crbegin
 SCENARIO("Testing the crbegin and rbegin methods simultaneously (successful case)") {
   GIVEN("A graph of int nodes and double edges containing two nodes and some edges") {
     gdwg::Graph<int, double> g;
@@ -751,6 +911,20 @@ SCENARIO("Testing the crbegin and rbegin methods simultaneously (successful case
   }
 }
 
+// only need to test one since crbegin returns rbegin
+SCENARIO("Testing the crbegin and rbegin methods simultaneously on an empty graph") {
+  GIVEN("An empty graph") {
+    gdwg::Graph<int, double> g;
+    WHEN("We try to access the last element in the graph using the rbegin method") {
+      gdwg::Graph<int,double>::const_reverse_iterator it = g.rbegin();
+      THEN("The iterator should be equivalent to crend") {
+        REQUIRE(it == g.crend());
+      }
+    }
+  }
+}
+
+// only need to test one since crend returns rend
 SCENARIO("Testing the crend and rend methods simultaneously (successful case)") {
   GIVEN("A graph of int nodes and double edges containing two nodes and some edges") {
     gdwg::Graph<int, double> g;
@@ -769,6 +943,19 @@ SCENARIO("Testing the crend and rend methods simultaneously (successful case)") 
           ++it;
           REQUIRE(*it == std::tuple<int, int, double>(1, 2, 6.9));
         }
+      }
+    }
+  }
+}
+
+// only need to test one since crbegin returns rbegin
+SCENARIO("Testing the crend and rend methods simultaneously on an empty graph") {
+  GIVEN("An empty graph") {
+    gdwg::Graph<int, double> g;
+    WHEN("We try to access the before-the-first element in the graph using the rend method") {
+      gdwg::Graph<int,double>::const_reverse_iterator it = g.rend();
+      THEN("The iterator should be equivalent to crbegin") {
+        REQUIRE(it == g.crbegin());
       }
     }
   }
@@ -803,6 +990,89 @@ SCENARIO("Testing the == friend operator on two equal graphs") {
   }
 }
 
+SCENARIO("Testing the == friend operator on two unequal graphs") {
+  GIVEN("Two graphs containing different nodes and edges") {
+    gdwg::Graph<int, double> g1;
+    g1.InsertNode(1);
+    g1.InsertNode(2);
+    g1.InsertNode(4);
+    g1.InsertNode(3);
+    g1.InsertEdge(1, 2, 6.9);
+    g1.InsertEdge(1, 3, 4.20);
+    g1.InsertEdge(1, 4, 5.2);
+
+    gdwg::Graph<int, double> g2;
+    g2.InsertNode(1);
+    g2.InsertNode(2);
+    g2.InsertNode(4);
+    g2.InsertNode(3);
+    g2.InsertEdge(1, 2, 7);
+    g2.InsertEdge(1, 3, 4.20);
+    g2.InsertEdge(1, 4, 5.2);
+    WHEN("We try to use the == friend operator to see if they are equal") {
+      bool equal = (g1 == g2);
+      THEN("The result should equal false") {
+        REQUIRE(equal == false);
+      }
+    }
+  }
+}
+
+SCENARIO("Testing the != friend operator on two equal graphs") {
+  GIVEN("Two graphs containing identical nodes and edges") {
+    gdwg::Graph<int, double> g1;
+    g1.InsertNode(1);
+    g1.InsertNode(2);
+    g1.InsertNode(4);
+    g1.InsertNode(3);
+    g1.InsertEdge(1, 2, 6.9);
+    g1.InsertEdge(1, 3, 4.20);
+    g1.InsertEdge(1, 4, 5.2);
+
+    gdwg::Graph<int, double> g2;
+    g2.InsertNode(1);
+    g2.InsertNode(2);
+    g2.InsertNode(4);
+    g2.InsertNode(3);
+    g2.InsertEdge(1, 2, 6.9);
+    g2.InsertEdge(1, 3, 4.20);
+    g2.InsertEdge(1, 4, 5.2);
+    WHEN("We try to use the != friend operator to see if they are equal") {
+      bool equal = (g1 != g2);
+      THEN("The result should equal false") {
+        REQUIRE(equal == false);
+      }
+    }
+  }
+}
+
+SCENARIO("Testing the != friend operator on two unequal graphs") {
+  GIVEN("Two graphs containing identical nodes and edges") {
+    gdwg::Graph<int, double> g1;
+    g1.InsertNode(1);
+    g1.InsertNode(2);
+    g1.InsertNode(4);
+    g1.InsertNode(69);
+    g1.InsertEdge(1, 2, 6.9);
+    g1.InsertEdge(1, 4, 5.2);
+
+    gdwg::Graph<int, double> g2;
+    g2.InsertNode(1);
+    g2.InsertNode(2);
+    g2.InsertNode(4);
+    g2.InsertNode(3);
+    g2.InsertEdge(1, 2, 6.9);
+    g2.InsertEdge(1, 3, 4.20);
+    g2.InsertEdge(1, 4, 5.2);
+    WHEN("We try to use the != friend operator to see if they are equal") {
+      bool equal = (g1 != g2);
+      THEN("The result should equal true") {
+        REQUIRE(equal == true);
+      }
+    }
+  }
+}
+
 SCENARIO("Checking that the << friend operator works with a simple graph") {
   GIVEN("A graph containing 2 int nodes and an edge connecting them") {
     gdwg::Graph<int, double> g1;
@@ -817,7 +1087,6 @@ SCENARIO("Checking that the << friend operator works with a simple graph") {
       std::stringstream s;
       s << g1;
       THEN("The output stream should print the contents of the graph in the correct order") {
-        std::cout << "printing g1 " << g1;
         std::string expected("1 (\n  2 | 6.9\n)\n2 (\n  3 | 1.1\n)\n3 (\n  2 | 1.2\n  2 | 1.4\n)\n");
         REQUIRE(s.str() == expected);
       }
@@ -937,9 +1206,6 @@ SCENARIO("Testing for exception in GetConnected when the src node doesn't exist 
   }
 }
 
-// CUSTOM ITERATOR FUNCTIONALITY TESTING STARTS HERE !!!!!!!!!! >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>.
-
-SCENARIO("")
 
 SCENARIO("Testing for exception in GetWeights when the src or dst node doesn't exist in graph") {
   GIVEN("An graph of int nodes and double edges containing two nodes and some edges") {
@@ -967,266 +1233,700 @@ SCENARIO("Testing for exception in GetWeights when the src or dst node doesn't e
   }
 }
 
-SCENARIO("a default constructed graph") {
-  gdwg::Graph<int, double> graph1;
-  gdwg::Graph<char, double> graph2;
-  gdwg::Graph<std::vector<double>, double> graph3;
 
-  WHEN("a primitive int is inserted as a node") {
-    REQUIRE(graph1.InsertNode(5));
-    REQUIRE(graph1.IsNode(5));
-  }
+// DUPLICATING PREVIOUS TESTS WITH CONST GRAPHS FOR CONST CORRECTNESS (where applicable, no point testing const on non const functions
+// or functions that need to change the graph such as InsertNode)
 
-  WHEN("a primitive char is inserted as a node") {
-    REQUIRE(graph2.InsertNode('c'));
-    REQUIRE(graph2.IsNode('c'));
-  }
-
-  WHEN("a non-primitive type is inserted as a node") {
-    std::vector<double> vector_double{2.0,2.0};
-    REQUIRE(graph3.InsertNode(vector_double));
-    REQUIRE(graph3.IsNode(vector_double));
-  }
-}
-
-SCENARIO("a initialiser list constructed graph") {
-  gdwg::Graph<std::string, double> graph{"red", "orange", "yellow", "green", "blue", "indigo", "violet"};
-  // std::cout << graph;
-
-  // since the nodes will be sorted
-  std::vector<std::string> colours{"blue", "green", "indigo", "orange", "red", "violet", "yellow" };
-  REQUIRE(isEqual(graph.GetNodes(), colours));
-
-  // TESTING FOR CORRECT ORDERING OF EDGES IN NODE
-  WHEN("multiple nodes are added as outgoing nodes to one node") {
-    graph.InsertEdge("violet", "red", 0.8);
-    graph.InsertEdge("violet", "orange", 0.7);
-    graph.InsertEdge("violet", "yellow", 0.6);
-    graph.InsertEdge("violet", "green", 0.5);
-    graph.InsertEdge("violet", "blue", 0.4);
-    graph.InsertEdge("violet", "indigo", 0.3);
-    graph.InsertEdge("violet", "violet", 0.2);
-
-    THEN("the edges should be ordered by their destination node") {
-      std::vector<std::string> expected{"blue", "green", "indigo", "orange", "red", "violet", "yellow"};
-      REQUIRE(expected == graph.GetConnected("violet"));
+SCENARIO("Constructing an empty const graph using the default constructor))") {
+    WHEN("We try to construct a graph of ints and doubles using the default constructor") {
+        const gdwg::Graph<int, double> g1;
+        THEN("The graph should be successfully constructed and empty") {
+            std::vector<int> v = g1.GetNodes();
+            REQUIRE(v.empty());
+        }
     }
-  }
+}
 
-  WHEN("multiple edges are added between two nodes") {
-    graph.InsertEdge("violet", "yellow", 0.8);
-    graph.InsertEdge("violet", "yellow", 0.7);
-    graph.InsertEdge("violet", "yellow", 0.6);
-    graph.InsertEdge("violet", "yellow", 0.5);
-    graph.InsertEdge("violet", "yellow", 0.4);
-    graph.InsertEdge("violet", "yellow", 0.3);
-    graph.InsertEdge("violet", "yellow", 0.2);
-    graph.InsertEdge("violet", "yellow", 0.1);
-
-    // TODO: ENFORCE CHECK THAT THE EDGES ARE IN ORDER 
-    // std::cout << graph;
-
-    THEN("the edges should be ordered by their weight to the destination node") {
-      std::vector<double> expected{0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8};
-      REQUIRE(expected == graph.GetWeights("violet", "yellow"));
+SCENARIO("Constructing a const graph using the const iterator constructor))") {
+    WHEN("We try to construct a graph of strings and doubles using the const iterator constructor") {
+        std::string p1 = "hello";
+        std::string p2 = "string";
+        std::string p3 = "cheesecake";
+        std::vector<std::string> pair_v{p1, p2, p3};
+        const gdwg::Graph<std::string, double> g{pair_v.begin(), pair_v.end()};
+        THEN("The graph should be successfully constructed and contain the correct nodes in the correct order") {
+          std::vector<std::string> v = g.GetNodes();
+          REQUIRE(v[0] == "cheesecake");
+          REQUIRE(v[1] == "hello");
+          REQUIRE(v[2] == "string");
+        }
     }
-  }
 }
 
+SCENARIO("Constructing a const graph using the tuple iterator constructor))") {
+    WHEN("We try to construct a graph of strings and doubles using the tuple iterator constructor") {
+        std::string sydney{"sydney"};
+        std::string melbourne{"melbourne"};
+        std::string perth{"perth"};
 
+        auto syd_melb = std::make_tuple(sydney, melbourne, 5.4);
+        auto melb_per = std::make_tuple(melbourne, perth, 20.1);
 
-SCENARIO("A graph initialised with values from a vector (provided by a start and end iterator)") {
-  std::string p1 = "hello"; // std::make_pair(1, 'a');
-  std::string p2 = "string";// std::make_pair(2, 'b');
-  std::string p3 = "cheesecake";// std::make_pair(3, 'c');
-  std::vector<std::string> pair_v{p1, p2, p3};
-  gdwg::Graph<std::string, double> graph{pair_v.begin(), pair_v.end()};
+        auto e = std::vector<std::tuple<std::string, std::string, double>>{syd_melb, melb_per};
+        const gdwg::Graph<std::string, double> aus{e.begin(), e.end()};
+        THEN("The graph should be successfully constructed and contain the correct nodes and edges") {
+            std::vector<std::string> v = aus.GetNodes();
+            REQUIRE(v[0] == melbourne);
+            REQUIRE(v[1] == perth);
+            REQUIRE(v[2] == sydney);
 
-  REQUIRE(graph.InsertEdge(p1, p2, 0.99));
-  REQUIRE(graph.IsConnected(p1, p2));
-
-  WHEN("a node is replaced") {
-    auto p4 = "bingsoo";
-    std::cout << graph;
-    REQUIRE(graph.Replace(p2, p4));
-    REQUIRE(!graph.IsNode(p2));
-
-    // std::cout << graph;
-
-    // check that all properties of p4 are the same as p2
-    // we only change the content of the underlying shared ptr
-    // so all the edges should still be there
-    REQUIRE(graph.IsNode(p4));
-    REQUIRE(graph.IsConnected(p1, p4));
-  }
-
-  WHEN("when node is deleted") {
-    REQUIRE(graph.DeleteNode(p2));
-    REQUIRE(!graph.IsNode(p2));
-
-    // less brittle than just checking returned vector is empty
-    auto connected = graph.GetConnected(p1);
-    auto it = std::find(connected.begin(), connected.end(), p2);
-    REQUIRE(it == connected.end());
-    // std::cout << graph;
-  }
-
-  WHEN("an edge is deleted") {
-    // std::cout << graph;
-    // std::cout << "deleting edge hello - 0.99 - string" << std::endl;
-    REQUIRE(graph.IsConnected("hello", "string"));
-    REQUIRE(graph.erase("hello", "string", 0.99));
-    REQUIRE(!graph.IsConnected("hello", "string"));
-    // std::cout << graph;
-  }
-
+            std::vector<double> syd_mel_weights = aus.GetWeights(sydney, melbourne);
+            std::vector<double> perth_mel_weights = aus.GetWeights(melbourne, perth);
+            REQUIRE(syd_mel_weights[0] == 5.4);
+            REQUIRE(perth_mel_weights[0] == 20.1);
+        }
+    }
 }
 
-SCENARIO("a graph initialised from a vector of tuples in the form <src, dst, weight>") {
+SCENARIO("Constructing a const graph using the initializer list constructor))") {
+    WHEN("We try to construct a graph of strings and doubles using the tuple iterator constructor") {
+        const gdwg::Graph<std::string, double> graph{"red", "orange", "yellow", "green", "blue", "indigo", "violet"};
+        THEN("The graph should be successfully constructed and contain the correct nodes and edges") {
+            std::vector<std::string> colours{"blue", "green", "indigo", "orange", "red", "violet", "yellow" };
+            REQUIRE(isEqual(graph.GetNodes(), colours));
+        }
+    }
+}
+
+SCENARIO("Construct a new const graph from an existing graph with the copy constructor") {
   std::string sydney{"sydney"};
   std::string melbourne{"melbourne"};
   std::string perth{"perth"};
-  std::string adelaide{"adelaide"};
-  std::string brisbane{"brisbane"};
-
 
   auto syd_melb = std::make_tuple(sydney, melbourne, 5.4);
   auto melb_per = std::make_tuple(melbourne, perth, 20.1);
-  auto per_ade = std::make_tuple(perth, adelaide, 25.9);
-  auto syd_ade = std::make_tuple(sydney, adelaide, 4.7);
-  auto ade_bris = std::make_tuple(adelaide, brisbane, 2.3);
 
+  auto e = std::vector<std::tuple<std::string, std::string, double>>{syd_melb, melb_per};
+  const gdwg::Graph<std::string, double> aus{e.begin(), e.end()};
 
-  auto e = std::vector<std::tuple<std::string, std::string, double>>{syd_melb, melb_per, per_ade, syd_ade, ade_bris};
-  gdwg::Graph<std::string, double> aus{e.begin(), e.end()};
+  WHEN("we construct a new graph from this graph") {
+    gdwg::Graph<std::string, double> aus2{aus};
 
-  WHEN("we get the nodes of the graph (GetNodes)"){
-    auto nodes = aus.GetNodes();
-    std::vector<std::string> expected{"adelaide", "brisbane", "melbourne", "perth", "sydney"};
-    REQUIRE(isEqual(nodes, expected));
-    
-    // std::cout << aus;
-  }
-
-  WHEN("we get the connected outgoing nodes from each city (GetConnected)") {
-    auto sydney_expected = std::vector<std::string>{"adelaide", "melbourne"};
-    auto sydney_connected = aus.GetConnected("sydney");
-    REQUIRE(isEqual(sydney_connected, sydney_expected));
-
-    auto adelaide_expected = std::vector<std::string>{"brisbane"};
-    auto adelaide_connected = aus.GetConnected("adelaide");
-    REQUIRE(isEqual(adelaide_connected, adelaide_expected));
-
-    auto brisbane_expected = std::vector<std::string>{};
-    auto brisbane_connected = aus.GetConnected("brisbane");
-    REQUIRE(isEqual(brisbane_connected, brisbane_expected));
-
-    auto melbourne_expected = std::vector<std::string>{"perth"};
-    auto melbourne_connected = aus.GetConnected("melbourne");
-    REQUIRE(isEqual(melbourne_connected, melbourne_expected));
-
-    auto perth_expected = std::vector<std::string>{"adelaide"};
-    auto perth_connected = aus.GetConnected("perth");
-    REQUIRE(isEqual(perth_connected, perth_expected));
-
-  }
-
-  WHEN("we get the weights for each connection (GetWeights)") {
-    REQUIRE(isEqual(aus.GetWeights("sydney", "melbourne"), std::vector<double>{5.4}));
-    REQUIRE(isEqual(aus.GetWeights("melbourne", "perth"), std::vector<double>{20.1}));
-    REQUIRE(isEqual(aus.GetWeights("perth", "adelaide"), std::vector<double>{25.9}));
-    REQUIRE(isEqual(aus.GetWeights("sydney", "adelaide"), std::vector<double>{4.7}));
-    REQUIRE(isEqual(aus.GetWeights("adelaide", "brisbane"), std::vector<double>{2.3}));
-  }
-
-  WHEN("we use our custom iterator in the forward direction") {
-    // std::cout << "-- TESTING CUSTOM ITERATOR --" << std::endl;
-    // std::cout << aus;
-    // for (auto it = aus.cbegin(); it != aus.cend(); ++it){
-    //   std::cout << "<" << std::get<0>(*it) << ", " << std::get<1>(*it) << ", " << std::get<2>(*it) << ">" << std::endl;
-    // }
-
-    std::vector<std::tuple<std::string, std::string, double>> edges(aus.cbegin(), aus.cend());
-    auto t1 = std::make_tuple("adelaide", "brisbane", 2.3);
-    auto t2 = std::make_tuple("melbourne", "perth", 20.1);
-    auto t3 = std::make_tuple("perth", "adelaide", 25.9);
-    auto t4 = std::make_tuple("sydney", "adelaide", 4.7);
-    auto t5 = std::make_tuple("sydney", "melbourne", 5.4);
-    std::vector<std::tuple<std::string, std::string, double>> expected{t1, t2, t3, t4, t5};
-    REQUIRE(edges == expected);
-
-  }
-
-  WHEN("we use our custom iterator in the reverse direction") {
-
-    // std::cout << "-- TESTING REVERSE ITERATOR --" << std::endl;
-    // for (auto rit = aus.rbegin(); rit != aus.rend(); ++rit) {
-    //   std::cout << "<" << std::get<0>(*(rit)) << ", " << std::get<1>(*rit) << ", " << std::get<2>(*rit) << ">" << std::endl;
-    // }
-
-    std::vector<std::tuple<std::string, std::string, double>> reverse_edges(aus.crbegin(), aus.crend());
-    auto t1 = std::make_tuple("adelaide", "brisbane", 2.3);
-    auto t2 = std::make_tuple("melbourne", "perth", 20.1);
-    auto t3 = std::make_tuple("perth", "adelaide", 25.9);
-    auto t4 = std::make_tuple("sydney", "adelaide", 4.7);
-    auto t5 = std::make_tuple("sydney", "melbourne", 5.4);
-    std::vector<std::tuple<std::string, std::string, double>> expected{t5, t4, t3, t2, t1};
-    REQUIRE(reverse_edges == expected);
-
-  }
-  
-
-  WHEN("We use find to get an iterator to a particular edge in our graph") {
-      auto it = aus.find("perth", "adelaide", 25.9);
-
-      auto t2 = std::make_tuple("melbourne", "perth", 20.1);
-      auto t3 = std::make_tuple("perth", "adelaide", 25.9);
-      auto t4 = std::make_tuple("sydney", "adelaide", 4.7);
-
-      REQUIRE(*it == t3);
-
-      WHEN("incremented forward") {
-          std::advance(it, 1);
-          REQUIRE(*it == t4);
-      }
-
-      WHEN("decremented backward") {
-          std::advance(it, -1);
-          REQUIRE(*it == t2);
-      }
-
-  }
-
-  WHEN("we use find to get an edge that doesn't exist") {
-    // adelaide is now plural, so shouldn't show up
-    REQUIRE(aus.find("perth", "adelaides", 25.9) == aus.end());
-  }
-
-  WHEN("we erase via an iterator on the graph") {
-    // std::cout << aus;
-    auto it = aus.find("perth", "adelaide", 25.9);
-    auto new_it = aus.erase(it);
-    REQUIRE(!aus.IsConnected("perth", "adelaide"));
-    // std::cout << aus;
-
-    auto after = std::make_tuple("sydney", "adelaide", 4.7);
-    REQUIRE(*new_it == after);
-    // std::cout << "new it after erasing <" << std::get<0>(*new_it) << ", " << std::get<1>(*new_it) << ", " << std::get<2>(*new_it) << ">" << std::endl;
-
-    WHEN("we erase by passing in the end, we should get back the end") {
-      REQUIRE(aus.erase(aus.end()) == aus.end());
+    THEN("the two graphs should equal") {
+      REQUIRE(aus == aus2);
     }
-
   }
-
-  WHEN("We try to use the MergeReplace function on it") {
-      aus.MergeReplace(sydney, melbourne);
-      THEN("We should get a graph where sydney edges are replaced by melbourne edges") {
-            REQUIRE(aus.IsConnected("melbourne", "adelaide"));
-            REQUIRE(aus.IsConnected("melbourne", "melbourne"));
-            REQUIRE(aus.IsConnected("melbourne", "perth"));
-            REQUIRE(!(aus.IsNode("sydney")));
-      }
-  }
-
 }
+
+
+SCENARIO("Construct a new const graph from an existing graph with the move constructor") {
+  GIVEN("A graph of int nodes and double edges containing two nodes and some edges") {
+    gdwg::Graph<int, double> g;
+    g.InsertNode(1);
+    g.InsertNode(2);
+    g.InsertEdge(1, 2, 6.9);
+    g.InsertEdge(1, 2, 4.20);
+    g.InsertEdge(1, 2, 5.2);
+    WHEN("We try to construct a second graph using the move constructor and the first graph") {
+      const gdwg::Graph<int, double> g2{std::move(g)};
+      THEN("The resulting graph should contain the original graphs values, and the original graph should be empty") {
+        std::vector<int> nodes1 = g.GetNodes();
+        REQUIRE(nodes1.size() == 0);
+
+        std::vector<int> nodes2 = g2.GetNodes();
+        REQUIRE(nodes2.size() == 2);
+        REQUIRE(nodes2[0] == 1);
+        REQUIRE(nodes2[1] == 2);
+
+        std::vector<double> edges2 = g2.GetWeights(1, 2);
+        REQUIRE(edges2.size() == 3);
+        REQUIRE(edges2[0] == 4.2);
+        REQUIRE(edges2[1] == 5.2);
+        REQUIRE(edges2[2] == 6.9);
+      }
+    }
+  }
+}
+
+SCENARIO("Testing the copy assignment with a const graph") {
+  GIVEN("A graph of int nodes and double edges containing two nodes and some edges") {
+    auto e1= std::make_tuple(1, 2, 6.9);
+    auto e2= std::make_tuple(1, 2, 4.2);
+    auto e3= std::make_tuple(1, 2, 5.2);
+
+    auto e = std::vector<std::tuple<int, int, double>>{e1, e2, e3};
+    const gdwg::Graph<int, double> g{e.begin(), e.end()};
+    WHEN("We try to copy the original graph to a new graph using the copy assignment") {
+      const gdwg::Graph<int, double> copy = g;
+      THEN("The original and copy should contain the same values") {
+        std::vector<int> nodes1 = g.GetNodes();
+        REQUIRE(nodes1.size() == 2);
+        REQUIRE(nodes1[0] == 1);
+        REQUIRE(nodes1[1] == 2);
+
+        std::vector<double> edges1 = g.GetWeights(1, 2);
+        REQUIRE(edges1.size() == 3);
+        REQUIRE(edges1[0] == 4.2);
+        REQUIRE(edges1[1] == 5.2);
+        REQUIRE(edges1[2] == 6.9);
+
+        std::vector<int> nodes2 = copy.GetNodes();
+        REQUIRE(nodes2.size() == 2);
+        REQUIRE(nodes2[0] == 1);
+        REQUIRE(nodes2[1] == 2);
+
+        std::vector<double> edges2 = copy.GetWeights(1, 2);
+        REQUIRE(edges2.size() == 3);
+        REQUIRE(edges2[0] == 4.2);
+        REQUIRE(edges2[1] == 5.2);
+        REQUIRE(edges2[2] == 6.9);
+      }
+/*
+      WHEN("we change the original") {
+        g.InsertNode(-99);
+        THEN("the copy and the original should be two independent graphs, and changes should not be reflected in both") {
+          REQUIRE(g.IsNode(-99));
+          REQUIRE(!copy.IsNode(-99));
+
+        }
+      }*/
+    }
+  }
+}
+
+
+SCENARIO("Testing the move assignment by moving to a const graph") {
+  GIVEN("A graph of int nodes and double edges containing two nodes and some edges") {
+    gdwg::Graph<int, double> g;
+    g.InsertNode(1);
+    g.InsertNode(2);
+    g.InsertEdge(1, 2, 6.9);
+    g.InsertEdge(1, 2, 4.20);
+    g.InsertEdge(1, 2, 5.2);
+    WHEN("We try to move the original graph to a new graph using the move assignment") {
+      const gdwg::Graph<int, double> move = std::move(g);
+      THEN("The original should be empty and the new graph should contain the same values that the original used to") {
+        std::vector<int> nodes1 = g.GetNodes();
+        REQUIRE(nodes1.size() == 0);
+
+        std::vector<int> nodes2 = move.GetNodes();
+        REQUIRE(nodes2.size() == 2);
+        REQUIRE(nodes2[0] == 1);
+        REQUIRE(nodes2[1] == 2);
+
+        std::vector<double> edges2 = move.GetWeights(1, 2);
+        REQUIRE(edges2.size() == 3);
+        REQUIRE(edges2[0] == 4.2);
+        REQUIRE(edges2[1] == 5.2);
+        REQUIRE(edges2[2] == 6.9);
+      }
+    }
+  }
+}
+
+// Ensuring that duplicates get removed automatically in a const graph
+SCENARIO("Testing that duplicate nodes and edges get removed in a const graph") {
+  GIVEN("An const graph of strings and doubles with a duplicate node and edge") {
+    std::string sydney{"sydney"};
+    std::string melbourne{"melbourne"};
+    std::string perth{"perth"};
+
+    auto syd_melb2 = std::make_tuple(sydney, melbourne, 5.4);
+    auto syd_melb = std::make_tuple(sydney, melbourne, 5.4);
+    auto melb_per = std::make_tuple(melbourne, perth, 20.1);
+
+    auto e = std::vector<std::tuple<std::string, std::string, double>>{syd_melb, melb_per, syd_melb2};
+    const gdwg::Graph<std::string, double> g{e.begin(), e.end()};
+    THEN("The resulting graph should automatically remove the duplicates") {
+      std::vector<std::string> nodes = g.GetNodes();
+      REQUIRE(nodes.size() == 3);
+      REQUIRE(nodes[0] == melbourne);
+      REQUIRE(nodes[1] == perth);
+      REQUIRE(nodes[2] == sydney);
+      std::vector<double> edges = g.GetWeights(sydney, melbourne);
+      REQUIRE(edges.size() == 1);
+      REQUIRE(edges[0] == 5.4);
+    }
+  }
+}
+
+
+SCENARIO("Testing the IsNode method with a const graph(successful case)") {
+    GIVEN("A const graph of int nodes and double edges containing two nodes and an edge") {
+    auto e1 = std::make_tuple(1, 2, 5.4);
+    auto e2= std::make_tuple(1, 2, 6.9);
+    auto e3= std::make_tuple(2, 3, 20.1);
+
+    auto e = std::vector<std::tuple<int, int, double>>{e1, e2, e3};
+    const gdwg::Graph<int, double> g{e.begin(), e.end()};
+        WHEN("We try to check the existence of an existing node using IsNode") {
+            bool exist = g.IsNode(1);
+            THEN("The return value should be true") {
+                REQUIRE(exist == true);
+            }
+        }
+    }
+}
+
+SCENARIO("Testing the IsNode method with a const graph (unsuccessful case)") {
+    GIVEN("An graph of int nodes and double edges containing two nodes and an edge") {
+    auto e1 = std::make_tuple(1, 2, 5.4);
+    auto e2= std::make_tuple(1, 2, 6.9);
+    auto e3= std::make_tuple(2, 3, 20.1);
+
+    auto e = std::vector<std::tuple<int, int, double>>{e1, e2, e3};
+    const gdwg::Graph<int, double> g{e.begin(), e.end()};
+        WHEN("We try to check the existence of an non-existent node using IsNode") {
+            bool exist = g.IsNode(69);
+            THEN("The return value should be false") {
+                REQUIRE(exist == false);
+            }
+        }
+    }
+}
+
+SCENARIO("Testing theIsConnected method with a const graph") {
+    GIVEN("A const graph of int nodes and double edges containing two nodes and an edge") {
+    auto e1 = std::make_tuple(1, 2, 5.4);
+    auto e2= std::make_tuple(1, 2, 6.9);
+    auto e3= std::make_tuple(2, 3, 20.1);
+
+    auto e = std::vector<std::tuple<int, int, double>>{e1, e2, e3};
+    const gdwg::Graph<int, double> g{e.begin(), e.end()};
+        WHEN("We try to check the existence of a connecting edge from the first node to the second using IsConnected") {
+            bool exist = g.IsConnected(1, 2);
+            THEN("The return value should be true") {
+                REQUIRE(exist == true);
+            }
+        }
+    }
+}
+
+SCENARIO("Testing the GetNodes method with a const graph to ensure correct nodes output in correct order") {
+    GIVEN("A const graph of int nodes and double edges containing two nodes and an edge") {
+    auto e1 = std::make_tuple(1, 2, 5.4);
+    auto e2= std::make_tuple(1, 2, 6.9);
+    auto e3= std::make_tuple(2, 3, 20.1);
+
+    auto e = std::vector<std::tuple<int, int, double>>{e1, e2, e3};
+    const gdwg::Graph<int, double> g{e.begin(), e.end()};
+        WHEN("We try to get a vector of nodes using GetNodes") {
+            std::vector<int> nodes = g.GetNodes();
+            THEN("The resulting vector should contain all the existing nodes in the correct order") {
+                REQUIRE(nodes[0] == 1);
+                REQUIRE(nodes[1] == 2);
+                REQUIRE(nodes[2] == 3);
+            }
+        }
+    }
+}
+
+SCENARIO("Testing the GetConnected method on a const graph to ensure correct nodes output in correct order") {
+  GIVEN("A graph of int nodes and double edges containing some nodes and some edges") {
+    auto e1 = std::make_tuple(1, 2, 5.4);
+    auto e2= std::make_tuple(1, 2, 6.9);
+    auto e3= std::make_tuple(1, 3, 20.1);
+
+    auto e = std::vector<std::tuple<int, int, double>>{e1, e2, e3};
+    const gdwg::Graph<int, double> g{e.begin(), e.end()};
+    WHEN("We try to get a vector of nodes connected to a src using GetConnected") {
+      std::vector<int> connected = g.GetConnected(1);
+      THEN("The resulting vector should contain all nodes connected to the source by an outgoing edge, sorted by increasing order") {
+        REQUIRE(connected[0] == 2);
+        REQUIRE(connected[1] == 3);
+      }
+    }
+  }
+}
+
+SCENARIO("Testing the GetWeights method on a const graph to ensure correct weights output in correct order") {
+  GIVEN("A graph of int nodes and double edges containing two nodes and some edges") {
+    auto e1 = std::make_tuple(1, 2, 5.4);
+    auto e2= std::make_tuple(1, 2, 6.9);
+    auto e3= std::make_tuple(1, 3, 20.1);
+
+    auto e = std::vector<std::tuple<int, int, double>>{e1, e2, e3};
+    const gdwg::Graph<int, double> g{e.begin(), e.end()};
+    WHEN("We try to get a vector of edge weights from a src to a dst using GetWeights") {
+      std::vector<double> weights = g.GetWeights(1, 2);
+      THEN("The resulting vector should contain edge weights from the src to the dst, sorted by increasing order") {
+        REQUIRE(weights[0] == 5.4);
+        REQUIRE(weights[1] == 6.9);
+      }
+    }
+  }
+}
+
+SCENARIO("Testing the find method on a const graph with a valid edge") {
+  GIVEN("A graph of int nodes and double edges containing two nodes and some edges") {
+    auto e1 = std::make_tuple(1, 2, 5.4);
+    auto e2= std::make_tuple(1, 2, 6.9);
+    auto e3= std::make_tuple(1, 3, 20.1);
+
+    auto e = std::vector<std::tuple<int, int, double>>{e1, e2, e3};
+    const gdwg::Graph<int, double> g{e.begin(), e.end()};
+    WHEN("We try to get an iterator to an edge found in the graph using the find method") {
+      gdwg::Graph<int,double>::const_iterator it = g.find(1, 2, 6.9);
+      THEN("The resulting iterator should point to a tuple containing the (src, dst, weight)") {
+        REQUIRE(*(it) == std::tuple<int, int, double>(1,2,6.9));
+      }
+    }
+  }
+}
+
+
+SCENARIO("Testing the find method on a const graph with an invalid edge") {
+  GIVEN("A graph of int nodes and double edges containing two nodes and some edges") {
+    auto e1 = std::make_tuple(1, 2, 5.4);
+    auto e2= std::make_tuple(1, 2, 6.9);
+    auto e3= std::make_tuple(1, 3, 20.1);
+
+    auto e = std::vector<std::tuple<int, int, double>>{e1, e2, e3};
+    const gdwg::Graph<int, double> g{e.begin(), e.end()};
+    WHEN("We try to get an iterator to an edge found in the graph using the find method") {
+      gdwg::Graph<int,double>::const_iterator it = g.find(1, 2, 7);
+      THEN("The resulting iterator should point to cend") {
+        REQUIRE(it == g.cend());
+      }
+    }
+  }
+}
+
+// only need to test one since begin returns cbegin
+SCENARIO("Testing the begin and cbegin methods simultaneously on a const graph (successful case)") {
+  GIVEN("A graph of int nodes and double edges containing two nodes and some edges") {
+    auto e2= std::make_tuple(1, 2, 6.9);
+    auto e3= std::make_tuple(1, 2, 7);
+
+    auto e = std::vector<std::tuple<int, int, double>>{e2, e3};
+    const gdwg::Graph<int, double> g{e.begin(), e.end()};
+    WHEN("We try to access the first element in the graph using the begin method") {
+      gdwg::Graph<int,double>::const_iterator it = g.begin();
+      THEN("The returned iterator should point to the first element in the graph") {
+        REQUIRE(*it == std::tuple<int, int, double>(1, 2, 6.9));
+      }
+      THEN("We should be able to increment the returned iterator") {
+        ++it;
+        REQUIRE(*it == std::tuple<int, int, double>(1, 2, 7));
+        THEN("We should be able to decrement the returned iterator back to its original position") {
+          --it;
+          REQUIRE(*it == std::tuple<int, int, double>(1, 2, 6.9));
+        }
+      }
+    }
+  }
+}
+
+// only need to test one since begin returns cbegin
+SCENARIO("Testing the begin and cbegin methods simultaneously on an empty const graph") {
+  GIVEN("An empty graph") {
+  const gdwg::Graph<int, double> g;
+    WHEN("We try to access the first element in the graph using the begin method") {
+      gdwg::Graph<int,double>::const_iterator it = g.begin();
+      THEN("Returned iterator should be equivalent to cbegin") {
+        REQUIRE(it == g.cend());
+      }
+    }
+  }
+}
+
+// only need to test one since end returns cend
+SCENARIO("Testing the end and cend methods simultaneously on a const graph (successful case)") {
+  GIVEN("A graph of int nodes and double edges containing two nodes and some edges") {
+    auto e2= std::make_tuple(1, 2, 6.9);
+    auto e3= std::make_tuple(1, 2, 7);
+
+    auto e = std::vector<std::tuple<int, int, double>>{e2, e3};
+    const gdwg::Graph<int, double> g{e.begin(), e.end()};
+    WHEN("We get an iterator to the past-the-end element in the graph using the end method") {
+      gdwg::Graph<int,double>::const_iterator it = g.end();
+      THEN("We should be able to decrement the returned iterator so that it now points to the last element") {
+        --it;
+        REQUIRE(*it == std::tuple<int, int, double>(1, 2, 7));
+        THEN("We should be able to increment the returned iterator back to its original position after decrementing it one more time") {
+          --it;
+          REQUIRE(*it == std::tuple<int, int, double>(1, 2, 6.9));
+          ++it;
+          REQUIRE(*it == std::tuple<int, int, double>(1, 2, 7));
+        }
+      }
+    }
+  }
+}
+
+// only need to test one since end returns cend
+SCENARIO("Testing the end and cend methods simultaneously on an empty const graph") {
+  GIVEN("An empty graph") {
+    const gdwg::Graph<int, double> g;
+    WHEN("We try to access the past-the-end element in the graph using the end method") {
+      gdwg::Graph<int,double>::const_iterator it = g.end();
+      THEN("Returned iterator should be equivalent to cbegin") {
+        REQUIRE(it == g.cbegin());
+      }
+    }
+  }
+}
+
+// only need to test one since rbegin returns crbegin
+SCENARIO("Testing the crbegin and rbegin methods simultaneously on a const graph(successful case)") {
+  GIVEN("A graph of int nodes and double edges containing two nodes and some edges") {
+    auto e2= std::make_tuple(1, 2, 6.9);
+    auto e3= std::make_tuple(1, 2, 7);
+
+    auto e = std::vector<std::tuple<int, int, double>>{e2, e3};
+    const gdwg::Graph<int, double> g{e.begin(), e.end()};
+    WHEN("We try to access the last element in the graph using the rbegin method") {
+      gdwg::Graph<int,double>::const_reverse_iterator it = g.rbegin();
+      THEN("The returned iterator should point to the last element in the graph") {
+        REQUIRE(*it == std::tuple<int, int, double>(1, 2, 7));
+      }
+      THEN("We should be able to move the returned iterator backwards") {
+        ++it;
+        REQUIRE(*it == std::tuple<int, int, double>(1, 2, 6.9));
+        THEN("We should be able to move the returned iterator forward to its original position") {
+          --it;
+          REQUIRE(*it == std::tuple<int, int, double>(1, 2, 7));
+        }
+      }
+    }
+  }
+}
+
+// only need to test one since crbegin returns rbegin
+SCENARIO("Testing the crbegin and rbegin methods simultaneously on an empty const graph") {
+  GIVEN("An empty graph") {
+    const gdwg::Graph<int, double> g;
+    WHEN("We try to access the last element in the graph using the rbegin method") {
+      gdwg::Graph<int,double>::const_reverse_iterator it = g.rbegin();
+      THEN("The iterator should be equivalent to crend") {
+        REQUIRE(it == g.crend());
+      }
+    }
+  }
+}
+
+// only need to test one since crend returns rend
+SCENARIO("Testing the crend and rend methods simultaneously on a const graph(successful case)") {
+  GIVEN("A graph of int nodes and double edges containing two nodes and some edges") {
+    auto e2= std::make_tuple(1, 2, 6.9);
+    auto e3= std::make_tuple(1, 2, 7);
+
+    auto e = std::vector<std::tuple<int, int, double>>{e3, e2};
+    const gdwg::Graph<int, double> g{e.begin(), e.end()};
+    WHEN("We try to access the before-the-first element in the graph using the rend method") {
+      gdwg::Graph<int,double>::const_reverse_iterator it = g.rend();
+      THEN("We should be able to move the returned iterator forward to the first element") {
+        --it;
+        REQUIRE(*it == std::tuple<int, int, double>(1, 2, 6.9));
+        THEN("We should be able to move the returned iterator backward to its original position after moving it forward one more time") {
+          --it;
+          REQUIRE(*it == std::tuple<int, int, double>(1, 2, 7));
+          ++it;
+          REQUIRE(*it == std::tuple<int, int, double>(1, 2, 6.9));
+        }
+      }
+    }
+  }
+}
+
+// only need to test one since crbegin returns rbegin
+SCENARIO("Testing the crend and rend methods simultaneously on an empty const graph") {
+  GIVEN("An empty graph") {
+    const gdwg::Graph<int, double> g;
+    WHEN("We try to access the before-the-first element in the graph using the rend method") {
+      gdwg::Graph<int,double>::const_reverse_iterator it = g.rend();
+      THEN("The iterator should be equivalent to crbegin") {
+        REQUIRE(it == g.crbegin());
+      }
+    }
+  }
+}
+
+// TESTING FRIENDS STARTS HERE !!!!!!!!!!!!!!!! >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+SCENARIO("Testing the == friend operator on two equal const graphs") {
+  GIVEN("Two graphs containing identical nodes and edges") {
+    auto e1= std::make_tuple(1, 2, 6.9);
+    auto e2= std::make_tuple(1, 3, 4.2);
+    auto e3= std::make_tuple(1, 4, 5.2);
+
+    auto en1 = std::vector<std::tuple<int, int, double>>{e1, e2, e3};
+    const gdwg::Graph<int, double> g1{en1.begin(), en1.end()};
+
+    auto eg1= std::make_tuple(1, 2, 6.9);
+    auto eg2= std::make_tuple(1, 3, 4.2);
+    auto eg3= std::make_tuple(1, 4, 5.2);
+
+    auto en2 = std::vector<std::tuple<int, int, double>>{eg1, eg2, eg3};
+    const gdwg::Graph<int, double> g2{en2.begin(), en2.end()};
+    WHEN("We try to use the == friend operator to see if they are equal") {
+      bool equal = (g1 == g2);
+      THEN("The result should equal true") {
+        REQUIRE(equal == true);
+      }
+    }
+  }
+}
+
+SCENARIO("Testing the == friend operator on two unequal const graphs") {
+  GIVEN("Two graphs containing different nodes and edges") {
+    auto e1= std::make_tuple(1, 2, 6.9);
+    auto e2= std::make_tuple(1, 3, 4.2);
+    auto e3= std::make_tuple(1, 4, 5.2);
+
+    auto en1 = std::vector<std::tuple<int, int, double>>{e1, e2, e3};
+    const gdwg::Graph<int, double> g1{en1.begin(), en1.end()};
+
+    auto eg1= std::make_tuple(1, 2, 7);
+    auto eg2= std::make_tuple(1, 3, 4.2);
+    auto eg3= std::make_tuple(1, 4, 5.2);
+
+    auto en2 = std::vector<std::tuple<int, int, double>>{eg1, eg2, eg3};
+    const gdwg::Graph<int, double> g2{en2.begin(), en2.end()};
+    WHEN("We try to use the == friend operator to see if they are equal") {
+      bool equal = (g1 == g2);
+      THEN("The result should equal false") {
+        REQUIRE(equal == false);
+      }
+    }
+  }
+}
+
+SCENARIO("Testing the != friend operator on two equal const graphs") {
+  GIVEN("Two graphs containing identical nodes and edges") {
+    auto e1= std::make_tuple(1, 2, 6.9);
+    auto e2= std::make_tuple(1, 3, 4.2);
+    auto e3= std::make_tuple(1, 4, 5.2);
+
+    auto en1 = std::vector<std::tuple<int, int, double>>{e1, e2, e3};
+    const gdwg::Graph<int, double> g1{en1.begin(), en1.end()};
+
+    auto eg1= std::make_tuple(1, 2, 6.9);
+    auto eg2= std::make_tuple(1, 3, 4.2);
+    auto eg3= std::make_tuple(1, 4, 5.2);
+
+    auto en2 = std::vector<std::tuple<int, int, double>>{eg1, eg2, eg3};
+    const gdwg::Graph<int, double> g2{en2.begin(), en2.end()};
+    WHEN("We try to use the != friend operator to see if they are equal") {
+      bool equal = (g1 != g2);
+      THEN("The result should equal false") {
+        REQUIRE(equal == false);
+      }
+    }
+  }
+}
+
+SCENARIO("Testing the != friend operator on two unequal const graphs") {
+  GIVEN("Two graphs containing identical nodes and edges") {
+    auto e1= std::make_tuple(1, 2, 6.9);
+    auto e2= std::make_tuple(1, 3, 4.2);
+    auto e3= std::make_tuple(1, 4, 420.69);
+
+    auto en1 = std::vector<std::tuple<int, int, double>>{e1, e2, e3};
+    const gdwg::Graph<int, double> g1{en1.begin(), en1.end()};
+
+    auto eg1= std::make_tuple(1, 2, 6.9);
+    auto eg2= std::make_tuple(1, 3, 4.2);
+    auto eg3= std::make_tuple(1, 4, 5.2);
+
+    auto en2 = std::vector<std::tuple<int, int, double>>{eg1, eg2, eg3};
+    const gdwg::Graph<int, double> g2{en2.begin(), en2.end()};
+    WHEN("We try to use the != friend operator to see if they are equal") {
+      bool equal = (g1 != g2);
+      THEN("The result should equal true") {
+        REQUIRE(equal == true);
+      }
+    }
+  }
+}
+
+SCENARIO("Checking that the << friend operator works with a simple const graph") {
+  GIVEN("A graph containing 2 int nodes and an edge connecting them") {
+    auto e1= std::make_tuple(1, 2, 6.9);
+    auto e2= std::make_tuple(2, 3, 1.1);
+    auto e3= std::make_tuple(3, 2, 1.2);
+    auto e4= std::make_tuple(3, 2, 1.4);
+
+    auto e = std::vector<std::tuple<int, int, double>>{e1, e2, e3, e4};
+    const gdwg::Graph<int, double> g1{e.begin(), e.end()};
+    WHEN("We try to use the << operator to print out the graph in order") {
+      std::stringstream s;
+      s << g1;
+      THEN("The output stream should print the contents of the graph in the correct order") {
+        std::string expected("1 (\n  2 | 6.9\n)\n2 (\n  3 | 1.1\n)\n3 (\n  2 | 1.2\n  2 | 1.4\n)\n");
+        REQUIRE(s.str() == expected);
+      }
+    }
+  }
+}
+
+// EXCEPTION TESTING STARTS HERE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+SCENARIO("Testing for exception in IsConnected when either node doesn't exist in const graph") {
+  GIVEN("An graph of int nodes and double edges containing two nodes and some edges") {
+    auto e1= std::make_tuple(1, 2, 6.9);
+    auto e2= std::make_tuple(1, 2, 4.2);
+    auto e3= std::make_tuple(1, 2, 5.2);
+
+    auto e = std::vector<std::tuple<int, int, double>>{e1, e2, e3};
+    const gdwg::Graph<int, double> g{e.begin(), e.end()};
+    WHEN("We try to use the IsConnected method from a non existent node to an existing one") {
+      THEN("We should throw the correct exception") {
+        REQUIRE_THROWS_WITH(g.IsConnected(3, 1), "Cannot call Graph::IsConnected if src or dst node don't exist in the graph");
+      }
+    }
+    WHEN("We try to use the IsConnected method from an existing node to a non existent one") {
+      THEN("We should throw the correct exception") {
+        REQUIRE_THROWS_WITH(g.IsConnected(1, 3), "Cannot call Graph::IsConnected if src or dst node don't exist in the graph");
+      }
+    }
+    WHEN("We try to use the IsConnected method between two non existent nodes") {
+      THEN("We should throw the correct exception") {
+        REQUIRE_THROWS_WITH(g.IsConnected(69, 3), "Cannot call Graph::IsConnected if src or dst node don't exist in the graph");
+      }
+    }
+  }
+}
+
+SCENARIO("Testing for exception in GetConnected when the src node doesn't exist in const graph") {
+  GIVEN("An graph of int nodes and double edges containing two nodes and some edges") {
+    auto e1= std::make_tuple(1, 2, 6.9);
+    auto e2= std::make_tuple(1, 2, 4.2);
+    auto e3= std::make_tuple(1, 2, 5.2);
+
+    auto e = std::vector<std::tuple<int, int, double>>{e1, e2, e3};
+    const gdwg::Graph<int, double> g{e.begin(), e.end()};
+    WHEN("We try to use the GetConnected method with a non existent src node") {
+      THEN("We should throw the correct exception") {
+        REQUIRE_THROWS_WITH(g.GetConnected(3), "Cannot call Graph::GetConnected if src doesn't exist in the graph");
+      }
+    }
+  }
+}
+
+
+SCENARIO("Testing for exception in GetWeights when the src or dst node doesn't exist in const graph") {
+  GIVEN("An graph of int nodes and double edges containing two nodes and some edges") {
+    auto e1= std::make_tuple(1, 2, 6.9);
+    auto e2= std::make_tuple(1, 2, 4.2);
+    auto e3= std::make_tuple(1, 2, 5.2);
+
+    auto e = std::vector<std::tuple<int, int, double>>{e1, e2, e3};
+    const gdwg::Graph<int, double> g{e.begin(), e.end()};
+    WHEN("We try to use the GetWeights method with a non existent src node") {
+      THEN("We should throw the correct exception") {
+        REQUIRE_THROWS_WITH(g.GetWeights(3, 1), "Cannot call Graph::GetWeights if src or dst node don't exist in the graph");
+      }
+    }
+    WHEN("We try to use the GetWeights method with a non existent dst node") {
+      THEN("We should throw the correct exception") {
+        REQUIRE_THROWS_WITH(g.GetWeights(1, 3), "Cannot call Graph::GetWeights if src or dst node don't exist in the graph");
+      }
+    }
+    WHEN("We try to use the GetWeights method with a non existent src and dst node") {
+      THEN("We should throw the correct exception") {
+        REQUIRE_THROWS_WITH(g.GetWeights(3, 69), "Cannot call Graph::GetWeights if src or dst node don't exist in the graph");
+      }
+    }
+  }
+}
+

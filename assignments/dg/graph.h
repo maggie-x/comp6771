@@ -19,6 +19,50 @@ class Graph {
  public:
  typedef std::pair<std::shared_ptr<N>, std::shared_ptr<E>> Edge;
 
+    //  CONSTRUCTORS
+
+    // default constructor
+    Graph() : nodes_() {}
+
+    // vector iterator constructor
+    Graph(typename std::vector<N>::const_iterator start, typename std::vector<N>::const_iterator end) {
+      for (auto it = start; it != end; ++it) {
+        InsertNode(*it);
+      }
+    }
+
+    // tuple iterator constructor
+    Graph(typename std::vector<std::tuple<N, N, E>>::const_iterator start, typename std::vector<std::tuple<N, N, E>>::const_iterator end) {
+      for (auto it = start; it != end; ++it) {
+        InsertNode(std::get<0>(*it));
+        InsertNode(std::get<1>(*it));
+        InsertEdge(std::get<0>(*it), std::get<1>(*it), std::get<2>(*it));
+      }
+    }
+
+    // initializer list constructor
+    Graph(std::initializer_list<N> init) {
+      for (auto it = init.begin(); it != init.end(); ++it){
+        InsertNode(*it);
+      }
+    }
+
+    // copy constructor
+    Graph(const Graph<N, E> &g) {
+      // we just populate a completely new graph which its own copy of the objects on the heap
+      for (auto it = g.begin(); it != g.end(); ++it) {
+        InsertNode(std::get<0>(*it));
+        InsertNode(std::get<1>(*it));
+        InsertEdge(std::get<0>(*it), std::get<1>(*it), std::get<2>(*it));
+      }
+    }
+
+    // move constructor
+    Graph(Graph<N,E> &&g) : nodes_{std::move(g.nodes_)} {}
+
+    // destructor
+    ~Graph() = default;
+
     /* ---- CUSTOM EDGE COMPARATOR (FOR NODE CLASS) ---- */
     // used to sort edges in the set, based on Node then weight
     struct edge_set_comparator {
@@ -29,7 +73,7 @@ class Graph {
 
         return *(a.first) < *(b.first);
       }
-    }; // new
+    };
 
 
     /* ---- NODE CLASS (HELPER CLASS) ---- */
@@ -40,24 +84,25 @@ class Graph {
 
       Node(const N &val) : val(std::make_shared<N>(val)), edges_() {}
 
+      // check if 2 nodes are equal (have the same value)
       friend bool operator==(const Node &a, const Node &b) {
           return *(a.val) ==  *(b.val);
       }
 
+      // check if one node is smaller than the other
       friend bool operator<(const Node &a, const Node &b) {
           return *(a.val) < *(b.val);
       }
 
+      // insert outgoing edge from this node to a dst node with weight E
       bool InsertOutgoing (std::shared_ptr<N> dst, const E &weight) { // pass in shared ptr after finding node in set of nodes
-          // std::cout << "InsertOutgoing(" << *dst << ", " << weight << ")" << std::endl;
-
           Edge e = std::make_pair(dst, std::make_shared<E>(weight));
           auto result = edges_.insert(std::move(e));
-          // std::cout << *val << " has edges: " << edges_.size() << std::endl;
           return result.second;
       }
 
-      bool EraseOutgoing(const N& dst, const E &weight) {
+        // erase outgoing edge from this node to a dst node with weight E
+        bool EraseOutgoing(const N& dst, const E &weight) {
         for (auto it = edges_.cbegin(); it != edges_.cend(); ++it) {
           if (*(it->first) == dst && *(it->second) == weight) { // found
             edges_.erase(it);
@@ -68,22 +113,20 @@ class Graph {
         return false;
       }
 
+      // replace existing outgoing edge from this node to old_dst with a new outgoing edge to new_dst with weight E
       void ReplaceOutgoing(const N& old_dst, std::shared_ptr<N> new_dst) {
         for (auto it = edges_.cbegin(); it != edges_.cend(); ++it) {
           if (*(it->first) == old_dst) {
             InsertOutgoing(new_dst, *(it->second)); // inserting the exact same edge, just new destination
           }
         }
-
         CleanOutgoing(old_dst);
       }
 
+      // erase all outgoing edges from this node to src
       void CleanOutgoing(const N &src) {
-        // std::cout << "CleanOutgoing(" << src << ")" << std::endl;
         auto it = edges_.cbegin();
         while (it != edges_.cend()) {
-          // std::cout << " *(it->first): " << *(it->first) << std::endl;
-          
           if (*(it->first) == src) { // found a dst which is an src
               edges_.erase(it++);
           } else {
@@ -92,6 +135,7 @@ class Graph {
         }
       }
 
+      // return true if this node has an outgoing edge to dst
       bool HasOutgoing(const N &dst) const {
         for (auto it = edges_.cbegin(); it != edges_.cend(); ++it) {
           if (*(it->first) == dst) {
@@ -101,6 +145,7 @@ class Graph {
         return false;
       }
 
+      // return iterator to an edge from this node to dst with a specified weight. If it doesn't exist, return .end()
       typename std::set<Edge>::const_iterator FindEdge(const N &dst, const E& weight) const {
         for (auto it = edges_.cbegin(); it != edges_.cend(); ++it) {
           if (*(it->first) == dst && *(it->second) == weight) {
@@ -110,42 +155,37 @@ class Graph {
         return edges_.cend();
       }
 
+      // return a set of nodes connected by outgoing edges
       std::set<N> GetOutgoing() const {
         std::set<N> outgoing;
         for (auto it = edges_.cbegin(); it != edges_.cend(); ++it) {
           outgoing.emplace(*(it->first));
         }
-
         return outgoing;
       }
 
+      // return a vector of edge weights from this node to dst
       std::vector<E> GetDestWeights(const N &dst) const {
-        std::cout << *this;
         std::vector<E> weights;
         for (auto it = edges_.cbegin(); it != edges_.cend(); ++it) {
           if (*(it->first) == dst){
             weights.emplace_back(*(it->second));
           }
         }
-        // std::sort(weights.begin(), weights.end());
         return weights;
       }
 
+      // return output stream which prints node contents and connecting edges
       friend std::ostream& operator<<(std::ostream &os, const Node &node) {
-          // std::cout << "number of edges for node " << *(node.val) << " is " << node.edges_.size() << std::endl;
           os << *(node.val) << " (" << std::endl;
           for (auto it = node.edges_.cbegin(); it != node.edges_.cend(); ++it) {
               os << "  " << *(it->first) << " | " <<  *(it->second) << std::endl;
           }
           os << ")" << std::endl;
-
           return os;
       }
-
       
     };
-
-
 
   /* ---- GRAPH ITERATOR ---- */
   class const_iterator {
@@ -161,11 +201,14 @@ class Graph {
     : node_it_{ nodes_pos }, 
       edge_it_{ edges_pos } {};
 
+    // returns tuple pointer to by iterator
     reference operator*() const { 
       return {*(node_it_->val), *(edge_it_->first), *(edge_it_->second)};
     };
+
     pointer operator->() const { return &(operator*()); };
 
+    // pre-increment
     const_iterator& operator++() { 
       ++edge_it_;
 
@@ -177,11 +220,13 @@ class Graph {
         }
         edge_it_ = node_it_->edges_.begin();
       }
-
       return *this;
-    }; // pre is the first one
+    };
+
+    // post-increment
     const_iterator operator++(int) { auto cpy {*this}; operator++(); return cpy; }; // post is the second
 
+    // pre-decrement
     const_iterator& operator--() {
         if (edge_it_ == node_it_->edges_.begin()) { // == begin
             --node_it_;
@@ -195,8 +240,11 @@ class Graph {
         --edge_it_;
         return *this;
     };
+
+    // post-decrement
     const_iterator operator--(int) { auto cpy {*this}; operator--(); return cpy; };
-  
+
+    // checks if two iterators are equal
     friend bool operator==(const_iterator a, const_iterator b) {
       return a.node_it_ == b.node_it_ && a.edge_it_ == b.edge_it_;
     }
@@ -210,27 +258,37 @@ class Graph {
       typename std::set<Edge>::const_iterator edge_it_;
   }; 
 
-  // using const_iterator = const_iterator;
   using const_reverse_iterator = std::reverse_iterator<const_iterator>;
-  
+
+  // returns const custom iterator to the first <N, N, E> tuple in the graph
   const_iterator cbegin() const {
-    // std::cout << nodes_.size() << std::endl;
     return const_iterator{nodes_.begin(), (nodes_.begin())->edges_.begin()};
   }
+
+  // returns const custom iterator to the last <N, N, E> tuple in the graph
   const_iterator cend() const {
-    // std::cout << (--(nodes_.end()))->edges_.size() << std::endl;
-    return const_iterator{nodes_.end(), (nodes_.end())->edges_.begin()}; // you cant start at .end(), thats null
-                                                                            // solution: have a prev pointer? like node* tail.
-                                                                            // or set the end to be a dummy node
-                                                                            // then have cend return the tail iterator of dummy
+    return const_iterator{nodes_.end(), (nodes_.end())->edges_.begin()};
   }
+
+  // same as cbegin()
   const_iterator begin() const { return cbegin(); }
+
+  // same as cend()
   const_iterator end() const { return cend(); }
+
+  // Returns a const_reverse_iterator pointing to the last element in the container
   const_reverse_iterator crbegin() const { return const_reverse_iterator{cend()}; }
+
+  // Returns a const_reverse_iterator pointing to the before-the-first element in the container
   const_reverse_iterator crend() const { return const_reverse_iterator{cbegin()}; }
+
+  // same as crbegin()
   const_reverse_iterator rbegin() const { return crbegin(); }
+
+  // same as crend()
   const_reverse_iterator rend() const { return crend(); }
 
+  // Returns an iterator to the found edge in the graph.
   const_iterator find(const N& a, const N& b, const E& weight) const {
     const auto a_node = nodes_.find(Node{a});
     const auto b_node = a_node->FindEdge(b, weight);
@@ -242,11 +300,11 @@ class Graph {
     return const_iterator(a_node, b_node);
   }
 
-  bool erase(const N& src, const N& dst, const E& w);
-
+  // removes the position at the location the passed in iterator points to
   const_iterator erase(const_iterator it) {
-
-    if (it == end()){
+      //std::cout << "calling erase" << std::endl;
+    if (it == this->end()){
+     // std::cout << "FOUND YA BITCH" << std::endl;
       return it;
     }
 
@@ -258,65 +316,21 @@ class Graph {
     auto result = erase(src, dst, w);
 
     if (!result) {
+      //std::cout << "FOUND YA BITCH2" << std::endl;
       return end();
     }
-
-    
+    //std::cout << "calling erase!2" << std::endl;
     return it;
   }
-  
-  //  CONSTRUCTORS
 
-  // default constructor
-  Graph() : nodes_() {}
-
-  Graph(typename std::vector<N>::const_iterator start, typename std::vector<N>::const_iterator end) {
-    for (auto it = start; it != end; ++it) {
-      InsertNode(*it);
-    }
-  }
-
-  Graph(typename std::vector<std::tuple<N, N, E>>::const_iterator start, typename std::vector<std::tuple<N, N, E>>::const_iterator end) {
-    for (auto it = start; it != end; ++it) {
-      InsertNode(std::get<0>(*it));
-      InsertNode(std::get<1>(*it));
-      InsertEdge(std::get<0>(*it), std::get<1>(*it), std::get<2>(*it));
-    }
-  }
-
-  Graph(std::initializer_list<N> init) {
-    for (auto it = init.begin(); it != init.end(); ++it){
-      InsertNode(*it);
-    }
-  }
-
-  // DESTRUCTOR
-  ~Graph() = default;
-
-  // COPY CONSTRUCTOR
-  Graph(const Graph<N, E> &g) {
-
-    // we just populate a completely new graph which its own copy of the objects on the heap
-    for (auto it = g.begin(); it != g.end(); ++it) {
-      InsertNode(std::get<0>(*it));
-      InsertNode(std::get<1>(*it));
-      InsertEdge(std::get<0>(*it), std::get<1>(*it), std::get<2>(*it));
-    } 
-  }
-
-  // MOVE CONSTRUCTOR
-  Graph(Graph<N,E> &&g) : nodes_{std::move(g.nodes_)} {
-    //std::cout << "MOVE CONSTRUCTOR CALLED" << std::endl;
-  }
-
-  // COPY ASSIGNMENT
+  // copy assignment
   Graph<N, E>& operator=(const Graph<N, E>& g) {
     Graph g_copy{g};
     std::swap(g_copy, this);
     return this;
   }
 
-  // MOVE ASSIGNMENT
+  // move assignment
   Graph<N, E>& operator=(
     Graph<N, E>&& g) {
     Graph g_move{g};
@@ -326,20 +340,43 @@ class Graph {
 
   //    METHODS (implementations in .tpp file)
 
+  // adds a new node with value val to the graph.
   bool InsertNode(const N& val);
+
+  // adds a new edge from src to dst with weight w to the graph
   bool InsertEdge(const N& src, const N& dst, const E& w);
+
+  // deletes existing node N from the graph. Does nothing if the node doesn't exist
   bool DeleteNode(const N&);
+
+  // replaces existing node oldData with new node newData. Throws error if oldData doesn't exist
   bool Replace(const N& oldData, const N& newData);
+
+  // All instances of node oldData in the graph are replaced with instances of newData. Throws exception if either node cannot be found in the graph
   void MergeReplace(const N& oldData, const N& newData);
+
+  // removes all nodes and edges from the graph
   void Clear();
+
+  // returns true if a node val exists in the graph
   bool IsNode(const N& val) const;
+
+  // returns true if an edge from src to dst exists in the graph. Throws exception if src or dst not in graph
   bool IsConnected(const N& src, const N& dst) const;
+
+  // returns a vector containing all existing nodes in the graph, sorted by increasing order of nodes
   std::vector<N> GetNodes() const;
+
+  // returns a vector containing all nodes found by immediate outgoing edges from src, sorted by increasing order of nodes. Throws exception if src not in graph
   std::vector<N> GetConnected(const N& src) const;
+
+  // returns vector of edge weights from src to dst, sorted by increasing order of weights. Throws exception if src or dst not in grpah
   std::vector<E> GetWeights(const N& src, const N& dst) const;
-  
-  
-  //  FRIENDS (stay in the .h file)
+
+  // deletes an edge from src to dst with weight w, only if the edge exists in the graph
+  bool erase(const N& src, const N& dst, const E& w);
+
+    //  FRIENDS (stay in the .h file)
 
   friend bool operator==(const gdwg::Graph<N, E>& g1, const gdwg::Graph<N, E>& g2) {
     // check both graphs have same nodes and edges
@@ -376,8 +413,8 @@ class Graph {
       return true;
   }
 
+  // prints out the graph in a specific order
   friend std::ostream& operator<<(std::ostream &os, const Graph<N, E> &graph) {
-    //std::cout << "--- PRINTING OUT GRAPH --- " << std::endl;
     for (auto it = graph.nodes_.cbegin(); it != graph.nodes_.cend(); ++it) {
         os << *(it);
     }
@@ -388,16 +425,10 @@ class Graph {
     }
     return os;
   }
-  
-  std::set<Node> get_nodes() {return nodes_;}
+
 private:
     std::set<Node> nodes_;
 };
-
-
-
-
-
 
 }  // namespace gdwg
 
