@@ -94,14 +94,7 @@ void gdwg::Graph<N, E>::MergeReplace(const N& oldData, const N& newData) {
 
   // now we need to connect all the incoming edges to the replacing node
   // iterate through each node in the graph and find ones that are outgoing to the old node
-  /* for (auto n : nodes_) {
-       auto new_n = n;
-       nodes_.erase(n);
-       //std::cout << "presegfault" << std::endl;
-       n.ReplaceOutgoing(*(old_node.val), new_node.val);
-     //std::cout << "postsegfault" << std::endl;
-       nodes_.insert(n);
-   }*/
+
   for (auto n : nodes_) {
     // n.ReplaceOutgoing(new_node, old_node);
     for (auto e : n.edges_) {  // iterating through each edge in the node
@@ -177,6 +170,9 @@ std::vector<E> gdwg::Graph<N, E>::GetWeights(const N& src, const N& dst) const {
 template <typename N, typename E>
 bool gdwg::Graph<N, E>::erase(const N& src, const N& dst, const E& w) noexcept {
 
+  if ((src == dst) || !IsNode(src) || !IsNode(dst)) return false;
+  if (find(src, dst, w) == end()) return false;
+
   auto src_it = nodes_.find(Node{src});
   auto src_node = *(src_it);
   auto dst_node = *(nodes_.find(Node{dst}));
@@ -184,7 +180,7 @@ bool gdwg::Graph<N, E>::erase(const N& src, const N& dst, const E& w) noexcept {
   auto result = src_node.EraseOutgoing(dst, w);
 
   // since we can't modify set elements, we need to delete the previous elem
-  // and then insert the new node with new edge connections
+  //d then insert the new node with new edge connections
   nodes_.erase(src_it);
   nodes_.insert(src_node);
 
