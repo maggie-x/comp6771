@@ -24,12 +24,12 @@ and non const graph to ensure const correctness.
 and end tests into one, since they literally return the same thing (cend calls and returns end)
 
 */
+#include "algorithm"
 #include "assignments/dg/graph.h"
 #include "catch.h"
+#include "sstream"
+#include "string"
 #include "vector"
-#include <algorithm>
-#include <sstream>
-#include <string>
 
 template <typename T>
 bool isEqual(std::vector<T> const& v1, std::vector<T> const& v2) {
