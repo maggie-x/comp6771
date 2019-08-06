@@ -2,7 +2,7 @@
 #define GRAPH_TPP
 
 template <typename N, typename E>
-bool gdwg::Graph<N, E>::InsertNode(const N &val) {
+bool gdwg::Graph<N, E>::InsertNode(const N &val) noexcept {
     Node new_node{val};
     auto result = nodes_.insert(new_node);
     return result.second;
@@ -26,7 +26,7 @@ bool gdwg::Graph<N,E>::InsertEdge(const N& src, const N& dst, const E& w) {
 }
 
 template <typename N, typename E>
-bool gdwg::Graph<N,E>::DeleteNode(const N& val) {
+bool gdwg::Graph<N,E>::DeleteNode(const N& val) noexcept {
     if (!IsNode(val)) return false; // if the node doesn't exist, there's nothing to delete
 
     auto val_it = nodes_.find(Node{val});
@@ -110,12 +110,12 @@ void gdwg::Graph<N,E>::MergeReplace(const N& oldData, const N& newData) {
 }
 
 template <typename N, typename E>
-bool gdwg::Graph<N,E>::IsNode(const N &val) const {
+bool gdwg::Graph<N,E>::IsNode(const N &val) const noexcept {
     return nodes_.find(Node{val}) != nodes_.end();
 }
 
 template <typename N, typename E>
-void gdwg::Graph<N,E>::Clear() {
+void gdwg::Graph<N,E>::Clear() noexcept {
 
     /* will call destructors on all fields and child classes (i believe)
     and since we are using smart pointers, underlying object will be
@@ -137,7 +137,7 @@ bool gdwg::Graph<N,E>::IsConnected(const N& src, const N& dst) const{
 }
 
 template <typename N, typename E>
-std::vector<N> gdwg::Graph<N,E>::GetNodes() const {
+std::vector<N> gdwg::Graph<N,E>::GetNodes() const noexcept {
   std::vector<N> vector_of_nodes;
   for (auto it = nodes_.cbegin(); it != nodes_.cend(); ++it) {
     vector_of_nodes.emplace_back((*(it->val)));
@@ -169,7 +169,7 @@ std::vector<E> gdwg::Graph<N,E>::GetWeights(const N& src, const N& dst) const {
 }
 
 template <typename N, typename E>
-bool gdwg::Graph<N,E>::erase(const N& src, const N& dst, const E& w) {
+bool gdwg::Graph<N,E>::erase(const N& src, const N& dst, const E& w) noexcept {
 
   auto src_it = nodes_.find(Node{src});
   auto src_node = *(src_it); 

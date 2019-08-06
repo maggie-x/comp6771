@@ -309,7 +309,7 @@ class Graph {
   }
 
   // removes the position at the location the passed in iterator points to
-  const_iterator erase(const_iterator it) {
+  const_iterator erase(const_iterator it) noexcept {
     if (it == this->end()){
       return it;
     }
@@ -328,30 +328,29 @@ class Graph {
   }
 
   // copy assignment
-  Graph<N, E>& operator=(const Graph<N, E>& g) {
+  Graph<N, E>& operator=(const Graph<N, E>& g) noexcept {
     Graph g_copy{g};
     std::swap(g_copy, this);
-    return this;
+    return *this;
   }
 
   // move assignment
-  Graph<N, E>& operator=(
-    Graph<N, E>&& g) {
+  Graph<N, E>& operator=(Graph<N, E>&& g) noexcept {
     Graph g_move{g};
     std::swap(g_move, this);
-    return this;
+    return *this;
   }
 
   //    METHODS (implementations in .tpp file)
 
   // adds a new node with value val to the graph.
-  bool InsertNode(const N& val);
+  bool InsertNode(const N& val) noexcept;
 
   // adds a new edge from src to dst with weight w to the graph
   bool InsertEdge(const N& src, const N& dst, const E& w);
 
   // deletes existing node N from the graph. Does nothing if the node doesn't exist
-  bool DeleteNode(const N&);
+  bool DeleteNode(const N&) noexcept;
 
   // replaces existing node oldData with new node newData. Throws error if oldData doesn't exist
   bool Replace(const N& oldData, const N& newData);
@@ -360,16 +359,16 @@ class Graph {
   void MergeReplace(const N& oldData, const N& newData);
 
   // removes all nodes and edges from the graph
-  void Clear();
+  void Clear() noexcept;
 
   // returns true if a node val exists in the graph
-  bool IsNode(const N& val) const;
+  bool IsNode(const N& val) const noexcept;
 
   // returns true if an edge from src to dst exists in the graph. Throws exception if src or dst not in graph
   bool IsConnected(const N& src, const N& dst) const;
 
   // returns a vector containing all existing nodes in the graph, sorted by increasing order of nodes
-  std::vector<N> GetNodes() const;
+  std::vector<N> GetNodes() const noexcept;
 
   // returns a vector containing all nodes found by immediate outgoing edges from src, sorted by increasing order of nodes. Throws exception if src not in graph
   std::vector<N> GetConnected(const N& src) const;
@@ -378,11 +377,11 @@ class Graph {
   std::vector<E> GetWeights(const N& src, const N& dst) const;
 
   // deletes an edge from src to dst with weight w, only if the edge exists in the graph
-  bool erase(const N& src, const N& dst, const E& w);
+  bool erase(const N& src, const N& dst, const E& w) noexcept;
 
     //  FRIENDS (stay in the .h file)
 
-  friend bool operator==(const gdwg::Graph<N, E>& g1, const gdwg::Graph<N, E>& g2) {
+  friend bool operator==(const gdwg::Graph<N, E>& g1, const gdwg::Graph<N, E>& g2) noexcept {
     // check both graphs have same nodes and edges
     for (const auto n : g1.nodes_) {
         // for (const auto it = g1.nodes_.begin(); it != g1.nodes_.end(); ++it) {
@@ -412,13 +411,13 @@ class Graph {
   }
 
   // using previously define == operator
-  friend bool operator!=(const Graph<N, E>& g1, const Graph<N, E>& g2) {
+  friend bool operator!=(const Graph<N, E>& g1, const Graph<N, E>& g2) noexcept {
       if (g1 == g2) return false;
       return true;
   }
 
   // prints out the graph in a specific order
-  friend std::ostream& operator<<(std::ostream &os, const Graph<N, E> &graph) {
+  friend std::ostream& operator<<(std::ostream &os, const Graph<N, E> &graph) noexcept {
     for (auto it = graph.nodes_.cbegin(); it != graph.nodes_.cend(); ++it) {
         os << *(it);
     }
