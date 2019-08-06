@@ -11,8 +11,7 @@ bool gdwg::Graph<N, E>::InsertNode(const N& val) noexcept {
 template <typename N, typename E>
 bool gdwg::Graph<N, E>::InsertEdge(const N& src, const N& dst, const E& w) {
   if (!IsNode(src) || !IsNode(dst)) {
-    std::runtime_error(
-        "Cannot call Graph::InsertEdge when either src or dst node does not exist");
+    std::runtime_error("Cannot call Graph::InsertEdge when either src or dst node does not exist");
   }
   auto src_it = nodes_.find(Node{src});
   auto src_node = *(src_it);
