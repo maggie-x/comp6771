@@ -50,7 +50,6 @@ class Graph {
 
   // copy constructor
   Graph(const Graph<N, E>& g) {
-
     // FIRST ADD ALL THE NODES
     for (auto it = g.nodes_.begin(); it != g.nodes_.end(); ++it) {
       InsertNode(*(it->val));
@@ -91,7 +90,7 @@ class Graph {
     std::shared_ptr<N> val;
     std::set<Edge, edge_set_comparator> edges_;
 
-    Node(const N& val) : val(std::make_shared<N>(val)), edges_() {}
+    explicit Node(const N& val) : val(std::make_shared<N>(val)), edges_() {}
 
     // check if 2 nodes are equal (have the same value)
     friend bool operator==(const Node& a, const Node& b) { return *(a.val) == *(b.val); }
@@ -212,9 +211,9 @@ class Graph {
     // returns tuple pointer to by iterator
     reference operator*() const {
       return {*(node_it_->val), *(edge_it_->first), *(edge_it_->second)};
-    };
+    }
 
-    pointer operator->() const { return &(operator*()); };
+    pointer operator->() const { return &(operator*()); }
 
     // pre-increment
     const_iterator& operator++() {
@@ -229,14 +228,14 @@ class Graph {
         edge_it_ = node_it_->edges_.begin();
       }
       return *this;
-    };
+    }
 
     // post-increment
     const_iterator operator++(int) {
       auto cpy{*this};
       operator++();
       return cpy;
-    };  // post is the second
+    }  // post is the second
 
     // pre-decrement
     const_iterator& operator--() {
@@ -251,14 +250,14 @@ class Graph {
       }
       --edge_it_;
       return *this;
-    };
+    }
 
     // post-decrement
     const_iterator operator--(int) {
       auto cpy{*this};
       operator--();
       return cpy;
-    };
+    }
 
     // checks if two iterators are equal
     friend bool operator==(const_iterator a, const_iterator b) {
@@ -316,7 +315,7 @@ class Graph {
 
   // removes the position at the location the passed in iterator points to
   const_iterator erase(const_iterator it) noexcept {
-    if (it == this->end()){
+    if (it == this->end()) {
       return it;
     }
 
@@ -375,7 +374,8 @@ class Graph {
   // in graph
   bool IsConnected(const N& src, const N& dst) const;
 
-  // returns a vector containing all existing nodes in the graph, sorted by increasing order of nodes
+  // returns a vector containing all existing nodes in the graph, sorted by increasing order of
+  // nodes
   std::vector<N> GetNodes() const noexcept;
 
   // returns a vector containing all nodes found by immediate outgoing edges from src, sorted by
@@ -404,7 +404,7 @@ class Graph {
           // if it doesn't the graphs are not equal so return false
           auto weight = *(e.second);
           // iterate through the corresponding node in the second graph to find the same edge
-          unsigned long count = 0;
+          uint count = 0;
           for (auto e2 : n2.edges_) {
             if (*(e2.second) == weight)
               break;
@@ -413,9 +413,7 @@ class Graph {
               return false;  // if we reach the end of n2 then the edge doesnt exist
           }
         }
-      }
-      // if the second graph doesn't contain the same node, return false
-      else {
+      } else {  // if the second graph doesn't contain the same node, return false
         return false;
       }
     }
@@ -424,12 +422,13 @@ class Graph {
 
   // using previously define == operator
   friend bool operator!=(const Graph<N, E>& g1, const Graph<N, E>& g2) noexcept {
-      if (g1 == g2) return false;
-      return true;
+    if (g1 == g2)
+      return false;
+    return true;
   }
 
   // prints out the graph in a specific order
-  friend std::ostream& operator<<(std::ostream &os, const Graph<N, E> &graph) noexcept {
+  friend std::ostream& operator<<(std::ostream& os, const Graph<N, E>& graph) noexcept {
     for (auto it = graph.nodes_.cbegin(); it != graph.nodes_.cend(); ++it) {
       os << *(it);
     }
