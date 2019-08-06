@@ -170,8 +170,10 @@ std::vector<E> gdwg::Graph<N, E>::GetWeights(const N& src, const N& dst) const {
 template <typename N, typename E>
 bool gdwg::Graph<N, E>::erase(const N& src, const N& dst, const E& w) noexcept {
 
-  if ((src == dst) || !IsNode(src) || !IsNode(dst)) return false;
-  if (find(src, dst, w) == end()) return false;
+  if ((src == dst) || !IsNode(src) || !IsNode(dst))
+    return false;
+  if (find(src, dst, w) == end())
+    return false;
 
   auto src_it = nodes_.find(Node{src});
   auto src_node = *(src_it);
@@ -180,7 +182,7 @@ bool gdwg::Graph<N, E>::erase(const N& src, const N& dst, const E& w) noexcept {
   auto result = src_node.EraseOutgoing(dst, w);
 
   // since we can't modify set elements, we need to delete the previous elem
-  //d then insert the new node with new edge connections
+  // d then insert the new node with new edge connections
   nodes_.erase(src_it);
   nodes_.insert(src_node);
 

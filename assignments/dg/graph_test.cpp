@@ -15,8 +15,8 @@ exception to check that it is throwing the correct error and string.
 
   Overall, each feature should be tested with it's own individual scenario to ensure that it's clear
 what is being tested and what could have gone wrong. Each method should be tested with both a const
-and non const graph to ensure const correctness (when applicable, no point testing a method which needs to
-modify stuff on a const graph)
+and non const graph to ensure const correctness (when applicable, no point testing a method which
+needs to modify stuff on a const graph)
 
   The iterator itself and it's functionality (increment and decrement) should be tested too.
   Finally, some tests can be combined or skipped to avoid redundancies. An example is combining cend

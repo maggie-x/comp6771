@@ -50,19 +50,18 @@ class Graph {
 
   // copy constructor
   Graph(const Graph<N, E>& g) {
-    // FIRST ADD ALL THE NODES
-    for (auto it = g.nodes_.begin(); it != g.nodes_.end(); ++it) {
-      InsertNode(*(it->val));
+    for (auto n : g.nodes_) {
+      nodes_.emplace(n);
     }
 
-    // THEN ADD ALL THE EDGES
-    for (auto it = g.begin(); it != g.end(); ++it) {
-      // safety check
-      if (!IsNode(std::get<0>(*it)) || !IsNode(std::get<1>(*it)))
-        continue;
-
-      // insert edge
-      InsertEdge(std::get<0>(*it), std::get<1>(*it), std::get<2>(*it));
+    for (auto n : g.nodes_) {
+      for (auto n2 : nodes_) {
+        if (*n.val == *n2.val) {
+          for (auto e : n.edges_) {
+            n2.InsertOutgoing(e.first, *e.second);
+          }
+        }
+      }
     }
   }
 
@@ -319,10 +318,10 @@ class Graph {
       return it;
     }
 
-    auto[src, dst, w] = *it;
+    auto [src, dst, w] = *it;
     // increment the iterator to return the next element after deleted element
     ++it;
-    auto[after_src, after_dst, after_w] = *it;
+    auto [after_src, after_dst, after_w] = *it;
     auto result = erase(src, dst, w);
 
     if (!result) {
