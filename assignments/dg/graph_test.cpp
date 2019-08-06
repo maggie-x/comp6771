@@ -50,12 +50,11 @@ TODO:
 [x] test checking for correct order of nodes/edges
 [x] test copy/move assignment/constructors
 */
+#include "algorithm"
 #include "assignments/dg/graph.h"
 #include "catch.h"
-#include "vector"
-#include <algorithm>
-#include <sstream>
-#include <string>
+#include "sstream"
+#include "string"
 
 template <typename T>
 bool isEqual(std::vector<T> const& v1, std::vector<T> const& v2) {
@@ -302,6 +301,71 @@ SCENARIO("Testing that preincrement works in the custom iterator") {
 
     auto e = std::vector<std::tuple<int, int, double>>{e1, e2, e3};
     const gdwg::Graph<int, double> g{e.begin(), e.end()};
+    WHEN("We try to preincrement an iterator to the first element in the graph") {
+      auto it = g.begin();
+      ++it;
+      THEN("The iterator should now point to the second element") {
+        REQUIRE(*it == std::tuple<int, int, double>(1, 2, 5.2));
+      }
+    }
+  }
+}
+
+SCENARIO("Testing that postincrement works in the custom iterator") {
+  GIVEN("A graph of ints and doubles") {
+    auto e1 = std::make_tuple(1, 2, 6.9);
+    auto e2 = std::make_tuple(1, 2, 4.2);
+    auto e3 = std::make_tuple(1, 2, 5.2);
+
+    auto e = std::vector<std::tuple<int, int, double>>{e1, e2, e3};
+    const gdwg::Graph<int, double> g{e.begin(), e.end()};
+    WHEN("We try to postincrement an iterator to the first element in the graph") {
+      auto it = g.begin();
+      auto copy = it++;
+      THEN("The iterator should now point to the second element and the returned copy should still "
+           "point to the first element") {
+        REQUIRE(*it == std::tuple<int, int, double>(1, 2, 5.2));
+        REQUIRE(*copy == std::tuple<int, int, double>(1, 2, 4.2));
+      }
+    }
+  }
+}
+
+SCENARIO("Testing that predecrement works in the custom iterator") {
+  GIVEN("A graph of ints and doubles") {
+    auto e1 = std::make_tuple(1, 2, 6.9);
+    auto e2 = std::make_tuple(1, 2, 4.2);
+    auto e3 = std::make_tuple(1, 2, 5.2);
+
+    auto e = std::vector<std::tuple<int, int, double>>{e1, e2, e3};
+    const gdwg::Graph<int, double> g{e.begin(), e.end()};
+    WHEN("We try to predecrement an iterator to the second element in the graph") {
+      auto it = g.find(1, 2, 5.2);
+      --it;
+      THEN("The iterator should now point to the second element") {
+        REQUIRE(*it == std::tuple<int, int, double>(1, 2, 4.2));
+      }
+    }
+  }
+}
+
+SCENARIO("Testing that postdecrement works in the custom iterator") {
+  GIVEN("A graph of ints and doubles") {
+    auto e1 = std::make_tuple(1, 2, 6.9);
+    auto e2 = std::make_tuple(1, 2, 4.2);
+    auto e3 = std::make_tuple(1, 2, 5.2);
+
+    auto e = std::vector<std::tuple<int, int, double>>{e1, e2, e3};
+    const gdwg::Graph<int, double> g{e.begin(), e.end()};
+    WHEN("We try to postdecrement an iterator to the second element in the graph") {
+      auto it = g.find(1, 2, 5.2);
+      auto copy = it--;
+      THEN("The iterator should now point to the second element and the returned copy should still "
+           "point to the second element") {
+        REQUIRE(*it == std::tuple<int, int, double>(1, 2, 4.2));
+        REQUIRE(*copy == std::tuple<int, int, double>(1, 2, 5.2));
+      }
+    }
   }
 }
 
@@ -1403,14 +1467,6 @@ SCENARIO("Testing the copy assignment with a const graph") {
         REQUIRE(edges2[1] == 5.2);
         REQUIRE(edges2[2] == 6.9);
       }
-      /*
-            WHEN("we change the original") {
-              g.InsertNode(-99);
-              THEN("the copy and the original should be two independent graphs, and changes should
-         not be reflected in both") { REQUIRE(g.IsNode(-99)); REQUIRE(!copy.IsNode(-99));
-
-              }
-            }*/
     }
   }
 }

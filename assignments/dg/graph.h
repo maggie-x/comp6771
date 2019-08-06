@@ -1,7 +1,6 @@
 #ifndef ASSIGNMENTS_DG_GRAPH_H_
 #define ASSIGNMENTS_DG_GRAPH_H_
 
-#include <algorithm>
 #include <iostream>
 #include <iterator>
 #include <map>
@@ -116,18 +115,6 @@ class Graph {
       }
       // not found
       return false;
-    }
-
-    // replace existing outgoing edge from this node to old_dst with a new outgoing edge to new_dst
-    // with weight E
-    void ReplaceOutgoing(const N& old_dst, std::shared_ptr<N> new_dst) {
-      for (auto it = edges_.cbegin(); it != edges_.cend(); ++it) {
-        if (*(it->first) == old_dst) {
-          InsertOutgoing(new_dst,
-                         *(it->second));  // inserting the exact same edge, just new destination
-        }
-      }
-      CleanOutgoing(old_dst);
     }
 
     // erase all outgoing edges from this node to src
@@ -391,10 +378,9 @@ class Graph {
 
   //  FRIENDS (stay in the .h file)
 
+  // checks both graphs have same nodes and edges
   friend bool operator==(const gdwg::Graph<N, E>& g1, const gdwg::Graph<N, E>& g2) noexcept {
-    // check both graphs have same nodes and edges
     for (const auto n : g1.nodes_) {
-      // for (const auto it = g1.nodes_.begin(); it != g1.nodes_.end(); ++it) {
       // checking nodes
       if (g2.nodes_.find(n) != g2.nodes_.end()) {
         auto n2 = *(g2.nodes_.find(n));  // this is the corresponding node in g2
@@ -404,7 +390,7 @@ class Graph {
           // if it doesn't the graphs are not equal so return false
           auto weight = *(e.second);
           // iterate through the corresponding node in the second graph to find the same edge
-          uint count = 0;
+          size_t count = 0;
           for (auto e2 : n2.edges_) {
             if (*(e2.second) == weight)
               break;
@@ -422,9 +408,7 @@ class Graph {
 
   // using previously define == operator
   friend bool operator!=(const Graph<N, E>& g1, const Graph<N, E>& g2) noexcept {
-    if (g1 == g2)
-      return false;
-    return true;
+    return (!(g1 == g2));
   }
 
   // prints out the graph in a specific order
