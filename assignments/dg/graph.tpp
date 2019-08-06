@@ -170,9 +170,6 @@ std::vector<E> gdwg::Graph<N,E>::GetWeights(const N& src, const N& dst) const {
 
 template <typename N, typename E>
 bool gdwg::Graph<N,E>::erase(const N& src, const N& dst, const E& w) {
-  if (!IsNode(src) || !IsNode(dst)) {
-    throw std::runtime_error("Cannot call Graph::InsertEdge when either src or dst node does not exist");
-  }
 
   auto src_it = nodes_.find(Node{src});
   auto src_node = *(src_it); 
