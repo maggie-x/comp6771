@@ -12,6 +12,8 @@ template <typename N, typename E>
 bool gdwg::Graph<N, E>::InsertEdge(const N& src, const N& dst, const E& w) {
   if (!IsNode(src) || !IsNode(dst)) {
     std::runtime_error("Cannot call Graph::InsertEdge when either src or dst node does not exist");
+    throw std::runtime_error(
+        "Cannot call Graph::InsertEdge when either src or dst node does not exist");
   }
   auto src_it = nodes_.find(Node{src});
   auto src_node = *(src_it);
@@ -93,7 +95,16 @@ void gdwg::Graph<N, E>::MergeReplace(const N& oldData, const N& newData) {
 
   // now we need to connect all the incoming edges to the replacing node
   // iterate through each node in the graph and find ones that are outgoing to the old node
+  /* for (auto n : nodes_) {
+       auto new_n = n;
+       nodes_.erase(n);
+       //std::cout << "presegfault" << std::endl;
+       n.ReplaceOutgoing(*(old_node.val), new_node.val);
+     //std::cout << "postsegfault" << std::endl;
+       nodes_.insert(n);
+   }*/
   for (auto n : nodes_) {
+    // n.ReplaceOutgoing(new_node, old_node);
     for (auto e : n.edges_) {  // iterating through each edge in the node
       if (*(e.first) == oldData) {
         InsertEdge(*(n.val), *(new_node.val), *(e.second));  // insert the new edge
