@@ -21,22 +21,17 @@ int main() {
 
   g.InsertEdge("are", "you?", 3);
 
-  std::set<gdwg::Graph<std::string, int>::Node> nodes = g.get_nodes();
-  std::cout << "printing graph pre move\n";
-  for (auto n : nodes) {
-    std::cout << n.val<<"\n";
-  }
-  gdwg::Graph<std::string, int> g_move{std::move(g)};
-  std::set<gdwg::Graph<std::string, int>::Node> nodes2 = g_move.get_nodes();
-  std::cout << "printing newly move constructed graph\n";
-  for (auto n : nodes2) {
-    std::cout << n.val<<"\n";
-  }
-  std::set<gdwg::Graph<std::string, int>::Node> nodes3 = g.get_nodes();
-  std::cout << "printing og graph\n";
-  for (auto n : nodes3) {
-    std::cout << n.val<<"\n";
-  }
+  gdwg::Graph<int, double> g1;
+  g1.InsertNode(1);
+  g1.InsertNode(2);
+  g1.InsertNode(3);
+  g1.InsertEdge(1, 2, 6.9);
+  g1.InsertEdge(1, 2, 4.2);
+  g1.InsertEdge(2, 3, 1.1);
+  g1.InsertEdge(3, 2, 1.2);
+  g1.InsertEdge(3, 2, 1.4);
+  std::cout << g1;
+  //std::cout << g << '\n';
 /*
   gdwg::Graph<std::string, int> g2{g};
 
