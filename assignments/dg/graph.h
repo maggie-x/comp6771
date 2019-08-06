@@ -49,10 +49,18 @@ class Graph {
 
     // copy constructor
     Graph(const Graph<N, E> &g) {
-      // we just populate a completely new graph which its own copy of the objects on the heap
+
+      // FIRST ADD ALL THE NODES
+      for (auto it = g.nodes_.begin(); it != g.nodes_.end(); ++it) {
+        InsertNode(*(it->val));
+      }
+
+      // THEN ADD ALL THE EDGES
       for (auto it = g.begin(); it != g.end(); ++it) {
-        InsertNode(std::get<0>(*it));
-        InsertNode(std::get<1>(*it));
+        // safety check
+        if (!IsNode(std::get<0>(*it)) || !IsNode(std::get<1>(*it)) ) continue;
+
+        // insert edge
         InsertEdge(std::get<0>(*it), std::get<1>(*it), std::get<2>(*it));
       }
     }
@@ -302,25 +310,21 @@ class Graph {
 
   // removes the position at the location the passed in iterator points to
   const_iterator erase(const_iterator it) {
-      //std::cout << "calling erase" << std::endl;
     if (it == this->end()){
-     // std::cout << "FOUND YA BITCH" << std::endl;
       return it;
     }
 
-    auto src = std::get<0>(*it);
-    auto dst = std::get<1>(*it);
-    auto w = std::get<2>(*it);
+    auto [src, dst, w] = *it;
     // increment the iterator to return the next element after deleted element
     ++it;
+    auto [after_src, after_dst, after_w] = *it;
     auto result = erase(src, dst, w);
 
     if (!result) {
-      //std::cout << "FOUND YA BITCH2" << std::endl;
       return end();
     }
-    //std::cout << "calling erase!2" << std::endl;
-    return it;
+
+    return find(after_src, after_dst, after_w);
   }
 
   // copy assignment

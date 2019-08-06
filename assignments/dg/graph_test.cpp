@@ -756,7 +756,7 @@ SCENARIO("Testing the (bool) erase method (unsuccessful case)") {
   }
 }
 
-/*
+
 SCENARIO("Testing the (const_iterator) erase method (successful case)") {
   GIVEN("A graph of int nodes and double edges containing two nodes and some edges") {
     gdwg::Graph<int, double> g;
@@ -770,11 +770,14 @@ SCENARIO("Testing the (const_iterator) erase method (successful case)") {
       THEN("The erase method should return an iterator to the element after the removed one and the graph should no longer have the erased edge") {
         std::cout << "seghunt 1\n";
         REQUIRE(std::get<0>(*it) == 1);
-std::cout << "seghunt 2\n";
+        std::cout << std::get<0>(*it);
+        std::cout << "seghunt 2\n";
         REQUIRE(std::get<1>(*it) == 2);
-std::cout << "seghunt 3\n";
+        std::cout << std::get<1>(*it);
+        std::cout << "seghunt 3\n";
         REQUIRE(std::get<2>(*it) == 7);
-std::cout << "seghunt 4\n";
+        std::cout << std::get<2>(*it);
+        std::cout << "seghunt 4\n";
         std::cout << "seghunt 5\n";
         REQUIRE(g.IsNode(1) == true);
         REQUIRE(g.IsNode(2) == true);
@@ -785,7 +788,7 @@ std::cout << "seghunt 4\n";
     }
   }
 }
-*/
+
 
  SCENARIO("Testing the (const_iterator) erase method (unsuccessful case)") {
   GIVEN("A graph of int nodes and double edges containing two nodes and some edges") {
