@@ -23,32 +23,6 @@ and non const graph to ensure const correctness.
   Finally, some tests can be combined or skipped to avoid redundancies. An example is combining cend
 and end tests into one, since they literally return the same thing (cend calls and returns end)
 
-DONE:
-[x] change E to a smart pointer
-[x] sort the edges in a smarter way? instead of doing it before we return
-[ ] HOW TO TEST individual methods when we don't have access to private fields
-    to check if the operation was actually successful
-[x] reverse iterator
-- (automatic decrement or we have to implement ourselves?)
-- returning reference in post-increment/decrement
-- do we need a pointer type for our iterator?
-
-TODO:
-[x] fix ReplaceOutgoing
-[x] more efficient method for bool operator==?
-[ ] erase changed to `DeleteNode`??
-[ ] more thorough tests
-- using non-primitive types
-- self-connected edges
-
-[x] check correct errors are being thrown & return types are correct
-[x] const correctness
-[x] clean up some code
-[x] edge cases
-[x] exception throwing tests
-[x] tests checking for duplicate handling (construction, methods)
-[x] test checking for correct order of nodes/edges
-[x] test copy/move assignment/constructors
 */
 #include "algorithm"
 #include "assignments/dg/graph.h"
