@@ -276,6 +276,71 @@ SCENARIO("Testing that preincrement works in the custom iterator") {
 
     auto e = std::vector<std::tuple<int, int, double>>{e1, e2, e3};
     const gdwg::Graph<int, double> g{e.begin(), e.end()};
+    WHEN("We try to use the preincrement on an iterator which points to the first element") {
+      auto it = g.begin();
+      ++it;
+      THEN("The iterator should now point to the second element") {
+        REQUIRE(*it == std::tuple<int, int, double>(1, 2, 5.2));
+      }
+    }
+  }
+}
+
+SCENARIO("Testing that postincrement works in the custom iterator") {
+  GIVEN("A graph of ints and doubles") {
+    auto e1 = std::make_tuple(1, 2, 6.9);
+    auto e2 = std::make_tuple(1, 2, 4.2);
+    auto e3 = std::make_tuple(1, 2, 5.2);
+
+    auto e = std::vector<std::tuple<int, int, double>>{e1, e2, e3};
+    const gdwg::Graph<int, double> g{e.begin(), e.end()};
+    WHEN("We try to use the postincrement on an iterator which points to the first element") {
+      auto it = g.begin();
+      auto copy = it++;
+      THEN("The iterator should now point to the second element and the returned copy should point "
+           "to the first element") {
+        REQUIRE(*it == std::tuple<int, int, double>(1, 2, 5.2));
+        REQUIRE(*copy == std::tuple<int, int, double>(1, 2, 4.2));
+      }
+    }
+  }
+}
+
+SCENARIO("Testing that predecrement works in the custom iterator") {
+  GIVEN("A graph of ints and doubles") {
+    auto e1 = std::make_tuple(1, 2, 6.9);
+    auto e2 = std::make_tuple(1, 2, 4.2);
+    auto e3 = std::make_tuple(1, 2, 5.2);
+
+    auto e = std::vector<std::tuple<int, int, double>>{e1, e2, e3};
+    const gdwg::Graph<int, double> g{e.begin(), e.end()};
+    WHEN("We try to use the predecrement on an iterator which points to the second element") {
+      auto it = g.find(1, 2, 5.2);
+      --it;
+      THEN("The iterator should now point to the first element") {
+        REQUIRE(*it == std::tuple<int, int, double>(1, 2, 4.2));
+      }
+    }
+  }
+}
+
+SCENARIO("Testing that postdecrement works in the custom iterator") {
+  GIVEN("A graph of ints and doubles") {
+    auto e1 = std::make_tuple(1, 2, 6.9);
+    auto e2 = std::make_tuple(1, 2, 4.2);
+    auto e3 = std::make_tuple(1, 2, 5.2);
+
+    auto e = std::vector<std::tuple<int, int, double>>{e1, e2, e3};
+    const gdwg::Graph<int, double> g{e.begin(), e.end()};
+    WHEN("We try to use the postdecrement on an iterator which points to the second element") {
+      auto it = g.find(1, 2, 5.2);
+      auto copy = it--;
+      THEN("The iterator should now point to the first element while the returned copy points to "
+           "the second") {
+        REQUIRE(*it == std::tuple<int, int, double>(1, 2, 4.2));
+        REQUIRE(*copy == std::tuple<int, int, double>(1, 2, 5.2));
+      }
+    }
   }
 }
 
