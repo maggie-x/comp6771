@@ -306,10 +306,10 @@ class Graph {
       return it;
     }
 
-    auto [src, dst, w] = *it;
+    auto[src, dst, w] = *it;
     // increment the iterator to return the next element after deleted element
     ++it;
-    auto [after_src, after_dst, after_w] = *it;
+    auto[after_src, after_dst, after_w] = *it;
     auto result = erase(src, dst, w);
 
     if (!result) {
