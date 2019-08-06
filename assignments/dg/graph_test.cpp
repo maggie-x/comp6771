@@ -768,7 +768,7 @@ SCENARIO("Testing the (const_iterator) erase method (successful case)") {
       gdwg::Graph<int,double>::const_iterator target = g.find(1, 2, 6.9);
       gdwg::Graph<int,double>::const_iterator it = g.erase(target);
       THEN("The erase method should return an iterator to the element after the removed one and the graph should no longer have the erased edge") {
-        std::cout << "seghunt 1\n";
+        std::cout << "seghunt 69\n";
         REQUIRE(std::get<0>(*it) == 1);
         std::cout << std::get<0>(*it);
         std::cout << "seghunt 2\n";
